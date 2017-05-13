@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Fantome.LeagueFileManager
 {
@@ -45,15 +43,34 @@ namespace Fantome.LeagueFileManager
             // Reading path list
             br.BaseStream.Seek(pathListOffset, SeekOrigin.Begin);
             PathList pathList = new PathList(br);
-            List<string> paths = pathList.paths;
             foreach (RAFFileEntry fileEntry in this.Files)
             {
-                fileEntry.AssignPath(paths);
+                fileEntry.AssignPath(pathList.Paths);
+            }
+        }
+
+        public void Save()
+        {
+            this.Save(this.FilePath);
+        }
+
+        public void Save(string filePath)
+        {
+            using (BinaryWriter bw = new BinaryWriter(new FileStream(filePath, FileMode.Create)))
+            {
+                this.Write(bw);
             }
         }
 
         private void Write(BinaryWriter bw)
         {
+            // Preparing file entries before writing
+            this.Files.Sort();
+            for (int i = 0; i < this.Files.Count; i++)
+            {
+                this.Files[i].AssignPathListIndex(i);
+            }
+
             bw.Write(0x18be0ef0);
             bw.Write(this.Version);
             bw.Write(this.ManagerIndex);
@@ -62,29 +79,62 @@ namespace Fantome.LeagueFileManager
             // Path list offset
             int pathListOffset = 24 + (this.Files.Count * 16);
             bw.Write(pathListOffset);
-            this.Files.Sort();
+            bw.Write(this.Files.Count);
+            foreach (RAFFileEntry fileEntry in this.Files)
+            {
+                fileEntry.Write(bw);
+            }
+            PathList pathList = new PathList(this.Files);
+            pathList.Write(bw);
         }
 
         private class PathList
         {
             private uint _size;
-            private int _count;
-            private uint _offset;
-            public List<string> paths { get; private set; } = new List<string>();
+            public List<string> Paths { get; private set; } = new List<string>();
 
             public PathList(BinaryReader br)
             {
-                this._offset = (uint)br.BaseStream.Position;
+                long offset = br.BaseStream.Position;
                 this._size = br.ReadUInt32();
-                this._count = br.ReadInt32();
-                for (int i = 0; i < _count; i++)
+                int count = br.ReadInt32();
+                for (int i = 0; i < count; i++)
                 {
                     uint pathOffset = br.ReadUInt32();
                     int pathLength = br.ReadInt32();
                     long currentOffset = br.BaseStream.Position;
-                    br.BaseStream.Seek(this._offset + pathOffset, SeekOrigin.Begin);
-                    this.paths.Add(Encoding.ASCII.GetString(br.ReadBytes(pathLength - 1)));
+                    br.BaseStream.Seek(offset + pathOffset, SeekOrigin.Begin);
+                    this.Paths.Add(Encoding.ASCII.GetString(br.ReadBytes(pathLength - 1)));
                     br.BaseStream.Seek(currentOffset, SeekOrigin.Begin);
+                }
+            }
+
+            public PathList(List<RAFFileEntry> files)
+            {
+                this._size = 0;
+                foreach (RAFFileEntry fileEntry in files)
+                {
+                    Paths.Add(fileEntry.Path);
+                    this._size += (uint)fileEntry.Path.Length + 1;
+                }
+            }
+
+            public void Write(BinaryWriter bw)
+            {
+                bw.Write(this._size);
+                bw.Write(this.Paths.Count);
+                // 8 bytes for each path entry
+                int currentOffset = 8 + this.Paths.Count * 8;
+                foreach (string path in this.Paths)
+                {
+                    bw.Write(currentOffset);
+                    bw.Write(path.Length + 1);
+                    currentOffset += path.Length + 1;
+                }
+                foreach (string path in this.Paths)
+                {
+                    bw.Write(Encoding.ASCII.GetBytes(path));
+                    bw.Write((byte)0);
                 }
             }
         }

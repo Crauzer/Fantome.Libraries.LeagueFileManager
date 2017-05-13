@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Fantome.LeagueFileManager
 {
@@ -28,6 +25,19 @@ namespace Fantome.LeagueFileManager
             public void AssignPath(List<string> paths)
             {
                 this.Path = paths[this._pathListIndex];
+            }
+
+            public void AssignPathListIndex(int pathListIndex)
+            {
+                this._pathListIndex = pathListIndex;
+            }
+
+            public void Write(BinaryWriter bw)
+            {
+                bw.Write(this.PathHash);
+                bw.Write(this.Offset);
+                bw.Write(this.Length);
+                bw.Write(this._pathListIndex);
             }
 
             public int CompareTo(RAFFileEntry other)

@@ -16,7 +16,9 @@ namespace Fantome.LeagueFileManager.Tests
 
         private static void RAFTests()
         {
-            RAF raf = new RAF(@"D:\Jeux\LeagueOfLegends\RADS\projects\lol_game_client\filearchives\0.0.0.25\Archive_1.raf");
+            RAF raf = new RAF(@"D:\Chewy\Desktop\Archive_2.raf");
+            raf.Save(@"D:\Chewy\Desktop\Archive_3.raf");
+            RAF raf2 = new RAF(@"D:\Chewy\Desktop\Archive_3.raf");
         }
 
         private static void LeagueInstallationTests()
