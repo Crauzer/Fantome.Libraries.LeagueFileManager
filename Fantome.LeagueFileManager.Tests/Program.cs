@@ -10,15 +10,19 @@ namespace Fantome.LeagueFileManager.Tests
     {
         static void Main(string[] args)
         {
-            LeagueInstallationTests();
+            RAFTests();
+            //LeagueInstallationTests();
+        }
 
+        private static void RAFTests()
+        {
+            RAF raf = new RAF(@"D:\Jeux\LeagueOfLegends\RADS\projects\lol_game_client\filearchives\0.0.0.25\Archive_1.raf");
         }
 
         private static void LeagueInstallationTests()
         {
             LeagueInstallation install = new LeagueInstallation(@"C:\Riot Games\League of Legends");
             var lolilol = install.GetProject("lol_game_client").GetLatestRelease();
-            lolilol.InstallFile("DATA/Characters/Zed/Skins/Base/Zed_base_TX_CM.DDS", ReleaseManifest.DeployMode.Managed, @"D:\Files\Documents\LoL\Wooxy debug\extract\maps\lol_game_client\DATA\Characters\Zed\Skins\Base\Zed_base_TX_CM.DDS");
         }
     }
 }

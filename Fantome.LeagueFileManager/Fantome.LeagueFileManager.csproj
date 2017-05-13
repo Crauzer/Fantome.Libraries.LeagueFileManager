@@ -47,7 +47,8 @@
     <Compile Include="ReleaseManifest\ReleaseManifest.cs" />
     <Compile Include="ReleaseManifest\ReleaseManifestFileEntry.cs" />
     <Compile Include="ReleaseManifest\ReleaseManifestFolderEntry.cs" />
-    <Compile Include="RiotArchiveFile\RiotArchiveFile.cs" />
+    <Compile Include="RAF\RAFFileEntry.cs" />
+    <Compile Include="RAF\RAF.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

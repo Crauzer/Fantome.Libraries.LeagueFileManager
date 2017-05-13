@@ -157,30 +157,36 @@ namespace Fantome.LeagueFileManager
 
         public void Save(string filePath)
         {
+            using (BinaryWriter bw = new BinaryWriter(new FileStream(filePath, FileMode.Create)))
+            {
+                this.Write(bw);
+            }
+        }
+
+        private void Write(BinaryWriter bw)
+        {
             int folderCount = 1 + GetFolderCount(this.Project);
             int fileCount = GetFileCount(this.Project);
             int nameSectionLength = GetNameSectionLength();
             SetFolderIndexes(this.Project, 1 + this.Project.Folders.Count);
             SetFileIndexes(this.Project, this.Project.Files.Count);
-            using (BinaryWriter bw = new BinaryWriter(new FileStream(filePath, FileMode.Create)))
+
+            bw.Write(Encoding.ASCII.GetBytes("RLSM"));
+            bw.Write(this.MajorVersion);
+            bw.Write(this.MinorVersion);
+            bw.Write(this.Names.IndexOf(this.ProjectName));
+            bw.Write(this.ReleaseVersion);
+            bw.Write(folderCount);
+            this.Project.Write(bw);
+            WriteSubFolderEntries(this.Project, bw);
+            bw.Write(fileCount);
+            WriteFileEntries(this.Project, bw);
+            bw.Write(this.Names.Count);
+            bw.Write(nameSectionLength);
+            foreach (string name in this.Names)
             {
-                bw.Write(Encoding.ASCII.GetBytes("RLSM"));
-                bw.Write(this.MajorVersion);
-                bw.Write(this.MinorVersion);
-                bw.Write(this.Names.IndexOf(this.ProjectName));
-                bw.Write(this.ReleaseVersion);
-                bw.Write(folderCount);
-                this.Project.Write(bw);
-                WriteSubFolderEntries(this.Project, bw);
-                bw.Write(fileCount);
-                WriteFileEntries(this.Project, bw);
-                bw.Write(this.Names.Count);
-                bw.Write(nameSectionLength);
-                foreach (string name in this.Names)
-                {
-                    bw.Write(Encoding.ASCII.GetBytes(name));
-                    bw.Write((byte)0);
-                }
+                bw.Write(Encoding.ASCII.GetBytes(name));
+                bw.Write((byte)0);
             }
         }
 
