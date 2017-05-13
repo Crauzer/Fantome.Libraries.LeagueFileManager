@@ -265,6 +265,7 @@ namespace Fantome.LeagueFileManager
         {
             public InvalidMagicNumberException(string readMagic) : base(String.Format("Invalid magic number (\"{0}\"), expected: \"RLSM\".", readMagic)) { }
         }
+
         public class InvalidNamesListException : Exception
         {
             public InvalidNamesListException() : base("Names counts don't match.") { }

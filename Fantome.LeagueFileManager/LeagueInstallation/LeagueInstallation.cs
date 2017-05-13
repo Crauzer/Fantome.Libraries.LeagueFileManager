@@ -9,6 +9,7 @@ namespace Fantome.LeagueFileManager
     {
         public string Folder { get; private set; }
         public List<LeagueProject> Projects { get; private set; } = new List<LeagueProject>();
+        public static uint FantomeFilesVersion { get; private set; } = GetReleaseValue("11.6.17.2");
 
         public LeagueInstallation(string gameFolder)
         {

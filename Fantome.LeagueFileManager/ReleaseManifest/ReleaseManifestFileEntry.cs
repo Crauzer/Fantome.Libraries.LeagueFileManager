@@ -36,7 +36,7 @@ namespace Fantome.LeagueFileManager
             public DeployMode DeployMode { get; set; }
             public int SizeRaw { get; set; }
             public int SizeCompressed { get; set; }
-            public DateTime LastWriteTime { get; set; }
+            public DateTime LastWriteTime { get; set; } = new DateTime();
             public ReleaseManifestFolderEntry Folder { get; set; }
 
             public ReleaseManifestFileEntry(BinaryReader br)
@@ -47,7 +47,12 @@ namespace Fantome.LeagueFileManager
                 this.DeployMode = (DeployMode)br.ReadUInt32();
                 this.SizeRaw = br.ReadInt32();
                 this.SizeCompressed = br.ReadInt32();
-                this.LastWriteTime = DateTime.FromBinary(br.ReadInt64()).AddYears(1600);
+                long dateValue = br.ReadInt64();
+                if (dateValue != 0)
+                {
+                    // The date is definitely a date!
+                    this.LastWriteTime = DateTime.FromBinary(dateValue).AddYears(1600);
+                }
             }
 
             public ReleaseManifestFileEntry(string name, int nameIndex, ReleaseManifestFolderEntry folder)
@@ -56,7 +61,6 @@ namespace Fantome.LeagueFileManager
                 this.NameIndex = nameIndex;
                 this.MD5 = new byte[16];
                 this.Folder = folder;
-                this.LastWriteTime = new DateTime();
             }
 
             public void Write(BinaryWriter bw)
@@ -67,7 +71,34 @@ namespace Fantome.LeagueFileManager
                 bw.Write((uint)this.DeployMode);
                 bw.Write(this.SizeRaw);
                 bw.Write(this.SizeCompressed);
-                bw.Write(this.LastWriteTime.AddYears(-1600).ToBinary());
+                if (this.LastWriteTime.ToBinary() == 0)
+                {
+                    bw.Write((long)0);
+                }
+                else
+                {
+                    bw.Write(this.LastWriteTime.AddYears(-1600).ToBinary());
+                }
+            }
+
+            public string GetFullPath()
+            {
+                if (this.Folder.Parent != null)
+                {
+                    return this.Folder.GetFullPath() + "/" + this.Name;
+                }
+                else
+                {
+                    return this.Name;
+                }
+            }
+
+            public void Remove()
+            {
+                if (this.Folder.Files.Contains(this))
+                {
+                    this.Folder.Files.Remove(this);
+                }
             }
         }
     }

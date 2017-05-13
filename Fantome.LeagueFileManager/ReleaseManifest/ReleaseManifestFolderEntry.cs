@@ -41,6 +41,26 @@ namespace Fantome.LeagueFileManager
                 bw.Write(this.FileListStartIndex);
                 bw.Write(this.Files.Count);
             }
+
+            public string GetFullPath()
+            {
+                if (this.Parent?.Parent != null)
+                {
+                    return this.Parent.GetFullPath() + "/" + this.Name;
+                }
+                else
+                {
+                    return this.Name;
+                }
+            }
+
+            public void Remove()
+            {
+                if (this.Parent.Folders.Contains(this))
+                {
+                    this.Parent.Folders.Remove(this);
+                }
+            }
         }
     }
 }

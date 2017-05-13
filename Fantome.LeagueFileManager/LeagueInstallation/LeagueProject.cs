@@ -9,12 +9,14 @@ namespace Fantome.LeagueFileManager
         {
             public LeagueInstallation Installation { get; private set; }
             public string Name { get; private set; }
+            public ReleaseManifest.DeployMode DefaultDeployMode { get; private set; }
             public List<LeagueProjectRelease> Releases { get; private set; } = new List<LeagueProjectRelease>();
 
             public LeagueProject(LeagueInstallation installation, string projectName, List<string> releases)
             {
                 this.Installation = installation;
                 this.Name = projectName;
+                this.DefaultDeployMode = this.GetDefaultDeployMode();
                 foreach (string release in releases)
                 {
                     try
@@ -28,6 +30,22 @@ namespace Fantome.LeagueFileManager
                 if (this.Releases.Count == 0)
                 {
                     throw new NoValidReleaseException();
+                }
+            }
+
+            private ReleaseManifest.DeployMode GetDefaultDeployMode()
+            {
+                if (this.Name.Equals("lol_game_client"))
+                {
+                    return ReleaseManifest.DeployMode.RAFRaw;
+                }
+                else if (this.Name.StartsWith("lol_game_client_"))
+                {
+                    return ReleaseManifest.DeployMode.Managed;
+                }
+                else
+                {
+                    return ReleaseManifest.DeployMode.Deployed;
                 }
             }
 

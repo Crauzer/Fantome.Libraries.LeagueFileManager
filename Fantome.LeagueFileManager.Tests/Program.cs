@@ -18,6 +18,7 @@ namespace Fantome.LeagueFileManager.Tests
         {
             LeagueInstallation install = new LeagueInstallation(@"C:\Riot Games\League of Legends");
             var lolilol = install.GetProject("lol_game_client").GetLatestRelease();
+            lolilol.InstallFile("DATA/Characters/Zed/Skins/Base/Zed_base_TX_CM.DDS", ReleaseManifest.DeployMode.Managed, @"D:\Files\Documents\LoL\Wooxy debug\extract\maps\lol_game_client\DATA\Characters\Zed\Skins\Base\Zed_base_TX_CM.DDS");
         }
     }
 }
