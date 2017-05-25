@@ -22,7 +22,6 @@ namespace Fantome.LeagueFileManager
                 if (File.Exists(manifestPath))
                 {
                     this.GameManifest = new ReleaseManifest(manifestPath);
-                    this.OriginalManifest = this.GetOriginalManifest(manifestPath);
                 }
                 else
                 {
@@ -30,16 +29,16 @@ namespace Fantome.LeagueFileManager
                 }
             }
 
-            private ReleaseManifest GetOriginalManifest(string gameManifestPath)
+            public void LoadOriginalManifest()
             {
                 string originalManifestFolder = String.Format("{0}manifests/{1}/{2}", AppDomain.CurrentDomain.BaseDirectory, this.Project.Name, this.Version);
                 string manifestPath = originalManifestFolder + "/releasemanifest";
                 Directory.CreateDirectory(originalManifestFolder);
                 if (!File.Exists(manifestPath))
                 {
-                    File.Copy(gameManifestPath, manifestPath);
+                    File.Copy(this.GameManifest.FilePath, manifestPath);
                 }
-                return new ReleaseManifest(manifestPath);
+                this.OriginalManifest = new ReleaseManifest(manifestPath);
             }
 
             public string GetFolder()

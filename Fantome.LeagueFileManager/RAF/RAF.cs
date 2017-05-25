@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Text;
 
 namespace Fantome.LeagueFileManager
@@ -11,7 +12,7 @@ namespace Fantome.LeagueFileManager
         public int Version { get; private set; }
         public int ManagerIndex { get; private set; }
         public List<RAFFileEntry> Files { get; private set; } = new List<RAFFileEntry>();
-        private BinaryReader _dataStream;
+        private FileStream _dataStream;
 
         public RAF(string filePath)
         {
@@ -36,17 +37,15 @@ namespace Fantome.LeagueFileManager
             }
         }
 
-        private void GetDataStream()
+        private void InitDataStream()
         {
-            if (File.Exists(this.FilePath + ".dat"))
+            if (this._dataStream != null)
             {
-                this._dataStream = new BinaryReader(File.OpenRead(this.FilePath + ".dat"));
+                // Already initialized!
+                return;
             }
-            else
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(this.FilePath));
-                this._dataStream = new BinaryReader(File.Create(this.FilePath + ".dat"));
-            }
+            Directory.CreateDirectory(Path.GetDirectoryName(this.FilePath));
+            this._dataStream = File.OpenWrite(this.FilePath + ".dat");
         }
 
         private void Read(BinaryReader br)
@@ -111,19 +110,64 @@ namespace Fantome.LeagueFileManager
             pathList.Write(bw);
         }
 
-        public void AddFile(string gamePath, byte[] data)
+        public void AddFile(string gamePath, byte[] data, bool compressed)
         {
-
+            this.InitDataStream();
+            this._dataStream.Seek(0, SeekOrigin.End);
+            uint fileOffset = (uint)this._dataStream.Length;
+            if (compressed)
+            {
+                this._dataStream.Write(BitConverter.GetBytes((ushort)40056), 0, 2);
+                byte[] deflateData = GetDeflateData(data);
+                this._dataStream.Write(deflateData, 0, deflateData.Length);
+                this._dataStream.Write(BitConverter.GetBytes(GetAdler32Hash(data)), 0, 4);
+            }
+            else
+            {
+                this._dataStream.Write(data, 0, data.Length);
+            }
+            this.Files.Add(new RAFFileEntry(gamePath, fileOffset, (uint)data.Length));
         }
 
-        public void AddFile(string gamePath, string inputFilePath)
+        private static int GetAdler32Hash(byte[] data)
         {
-            this.AddFile(gamePath, File.ReadAllBytes(inputFilePath));
+            long MOD_ADLER = 65521;
+            long s1 = 1;
+            long s2 = 0;
+            foreach (byte dataByte in data)
+            {
+                s1 = (s1 + dataByte) % MOD_ADLER;
+                s2 = (s1 + s2) % MOD_ADLER;
+            }
+            int hash = (int)((s2 << 16) + s1);
+            return (int)(hash & 0xFF000000) >> 24 | (hash & 0x00FF0000) >> 8 | (hash & 0x0000FF00) << 8 | (hash & 0x000000FF) << 24;
+        }
+
+        private static byte[] GetDeflateData(byte[] rawData)
+        {
+            byte[] compressedData = null;
+            using (MemoryStream originalFileStream = new MemoryStream(rawData))
+            {
+                using (MemoryStream compressedFileStream = new MemoryStream())
+                {
+                    using (DeflateStream compressionStream = new DeflateStream(compressedFileStream, CompressionMode.Compress))
+                    {
+                        originalFileStream.CopyTo(compressionStream);
+                    }
+                    compressedData = compressedFileStream.ToArray();
+                }
+            }
+            return compressedData;
+        }
+
+        public void AddFile(string gamePath, string inputFilePath, bool compressed)
+        {
+            this.AddFile(gamePath, File.ReadAllBytes(inputFilePath), compressed);
         }
 
         public void Dispose()
         {
-            if (this._dataStream?.BaseStream != null)
+            if (this._dataStream != null)
             {
                 this._dataStream.Dispose();
                 this._dataStream = null;

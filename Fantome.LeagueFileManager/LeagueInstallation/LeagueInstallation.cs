@@ -54,6 +54,14 @@ namespace Fantome.LeagueFileManager
             }
         }
 
+        public void LoadOriginalManifests()
+        {
+            foreach (LeagueProject project in this.Projects)
+            {
+                project.LoadOriginalManifests();
+            }
+        }
+
         public LeagueProject GetProject(string projectName)
         {
             return this.Projects.Find(x => String.Equals(x.Name, projectName, StringComparison.InvariantCultureIgnoreCase));

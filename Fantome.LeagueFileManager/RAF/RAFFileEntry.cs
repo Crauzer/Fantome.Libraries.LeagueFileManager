@@ -45,6 +45,7 @@ namespace Fantome.LeagueFileManager
                 this.Path = path;
                 this.Offset = offset;
                 this.Length = length;
+                this.PathHash = this.GetPathHash();
             }
 
             public void AssignPath(List<string> paths)

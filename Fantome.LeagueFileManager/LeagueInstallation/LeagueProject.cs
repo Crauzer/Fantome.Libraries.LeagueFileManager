@@ -33,6 +33,14 @@ namespace Fantome.LeagueFileManager
                 }
             }
 
+            public void LoadOriginalManifests()
+            {
+                foreach(LeagueProjectRelease release in this.Releases)
+                {
+                    release.LoadOriginalManifest();
+                }
+            }
+
             private ReleaseManifest.DeployMode GetDefaultDeployMode()
             {
                 if (this.Name.Equals("lol_game_client"))
