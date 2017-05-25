@@ -13,13 +13,44 @@ namespace Fantome.LeagueFileManager
             public uint Length { get; private set; }
             public uint PathHash { get; private set; }
             private int _pathListIndex;
+            private RAF _raf;
 
-            public RAFFileEntry(BinaryReader br)
+            public RAFFileEntry(RAF raf, BinaryReader br)
             {
+                this._raf = raf;
                 this.PathHash = br.ReadUInt32();
                 this.Offset = br.ReadUInt32();
                 this.Length = br.ReadUInt32();
                 this._pathListIndex = br.ReadInt32();
+            }
+
+            public RAFFileEntry(RAF raf, string path, uint offset, uint length)
+            {
+                this._raf = raf;
+                this.Path = path;
+                this.Offset = offset;
+                this.Length = length;
+                this.PathHash = this.GetPathHash();
+            }
+
+            public byte[] GetContent(bool compressed)
+            {
+                this._raf.InitDataStream();
+                byte[] data;
+                if (compressed)
+                {
+                    this._raf._dataStream.Seek((int)this.Offset + 2, SeekOrigin.Begin);
+                    data = new byte[this.Length - 6];
+                    this._raf._dataStream.Read(data, 0, (int)this.Length - 6);
+                    return GetDecompressedData(data);
+                }
+                else
+                {
+                    this._raf._dataStream.Seek((int)this.Offset, SeekOrigin.Begin);
+                    data = new byte[this.Length];
+                    this._raf._dataStream.Read(data, 0, (int)this.Length);
+                    return data;
+                }
             }
 
             public uint GetPathHash()
@@ -38,14 +69,6 @@ namespace Fantome.LeagueFileManager
                     }
                 }
                 return hash;
-            }
-
-            public RAFFileEntry(string path, uint offset, uint length)
-            {
-                this.Path = path;
-                this.Offset = offset;
-                this.Length = length;
-                this.PathHash = this.GetPathHash();
             }
 
             public void AssignPath(List<string> paths)

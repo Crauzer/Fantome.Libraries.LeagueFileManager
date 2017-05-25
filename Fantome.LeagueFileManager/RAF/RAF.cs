@@ -45,7 +45,7 @@ namespace Fantome.LeagueFileManager
                 return;
             }
             Directory.CreateDirectory(Path.GetDirectoryName(this.FilePath));
-            this._dataStream = File.OpenWrite(this.FilePath + ".dat");
+            this._dataStream = File.Open(this.FilePath + ".dat", FileMode.OpenOrCreate);
         }
 
         private void Read(BinaryReader br)
@@ -65,7 +65,7 @@ namespace Fantome.LeagueFileManager
             int fileCount = br.ReadInt32();
             for (int i = 0; i < fileCount; i++)
             {
-                this.Files.Add(new RAFFileEntry(br));
+                this.Files.Add(new RAFFileEntry(this, br));
             }
             // Reading path list
             br.BaseStream.Seek(pathListOffset, SeekOrigin.Begin);
@@ -115,18 +115,20 @@ namespace Fantome.LeagueFileManager
             this.InitDataStream();
             this._dataStream.Seek(0, SeekOrigin.End);
             uint fileOffset = (uint)this._dataStream.Length;
+            int fileLength = data.Length;
             if (compressed)
             {
                 this._dataStream.Write(BitConverter.GetBytes((ushort)40056), 0, 2);
-                byte[] deflateData = GetDeflateData(data);
+                byte[] deflateData = GetCompressedData(data);
                 this._dataStream.Write(deflateData, 0, deflateData.Length);
                 this._dataStream.Write(BitConverter.GetBytes(GetAdler32Hash(data)), 0, 4);
+                fileLength = deflateData.Length + 2 + 4;
             }
             else
             {
                 this._dataStream.Write(data, 0, data.Length);
             }
-            this.Files.Add(new RAFFileEntry(gamePath, fileOffset, (uint)data.Length));
+            this.Files.Add(new RAFFileEntry(this, gamePath, fileOffset, (uint)fileLength));
         }
 
         private static int GetAdler32Hash(byte[] data)
@@ -143,21 +145,38 @@ namespace Fantome.LeagueFileManager
             return (int)(hash & 0xFF000000) >> 24 | (hash & 0x00FF0000) >> 8 | (hash & 0x0000FF00) << 8 | (hash & 0x000000FF) << 24;
         }
 
-        private static byte[] GetDeflateData(byte[] rawData)
+        private static byte[] GetCompressedData(byte[] rawData)
         {
             byte[] compressedData = null;
-            using (MemoryStream originalFileStream = new MemoryStream(rawData))
+            using (MemoryStream originalStream = new MemoryStream(rawData))
             {
-                using (MemoryStream compressedFileStream = new MemoryStream())
+                using (MemoryStream compressedStream = new MemoryStream())
                 {
-                    using (DeflateStream compressionStream = new DeflateStream(compressedFileStream, CompressionMode.Compress))
+                    using (DeflateStream compressionStream = new DeflateStream(compressedStream, CompressionMode.Compress))
                     {
-                        originalFileStream.CopyTo(compressionStream);
+                        originalStream.CopyTo(compressionStream);
                     }
-                    compressedData = compressedFileStream.ToArray();
+                    compressedData = compressedStream.ToArray();
                 }
             }
             return compressedData;
+        }
+
+        private static byte[] GetDecompressedData(byte[] compressedData)
+        {
+            byte[] decompressedData = null;
+            using (MemoryStream compressedStream = new MemoryStream(compressedData))
+            {
+                using (MemoryStream rawStream = new MemoryStream())
+                {
+                    using (DeflateStream decompressionStream = new DeflateStream(compressedStream, CompressionMode.Decompress))
+                    {
+                        decompressionStream.CopyTo(rawStream);
+                    }
+                    decompressedData = rawStream.ToArray();
+                }
+            }
+            return decompressedData;
         }
 
         public void AddFile(string gamePath, string inputFilePath, bool compressed)
