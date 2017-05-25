@@ -5,19 +5,47 @@ using System.Text;
 
 namespace Fantome.LeagueFileManager
 {
-    public partial class RAF
+    public partial class RAF : IDisposable
     {
         public string FilePath { get; private set; }
         public int Version { get; private set; }
         public int ManagerIndex { get; private set; }
         public List<RAFFileEntry> Files { get; private set; } = new List<RAFFileEntry>();
+        private BinaryReader _dataStream;
 
         public RAF(string filePath)
         {
             this.FilePath = filePath;
-            using (BinaryReader br = new BinaryReader(File.OpenRead(filePath), Encoding.ASCII))
+            if (File.Exists(filePath))
             {
-                this.Read(br);
+                // Open an existing RAF and check if data file exists
+                if (!File.Exists(filePath + ".dat"))
+                {
+                    throw new MissingDataFileException();
+                }
+                using (BinaryReader br = new BinaryReader(File.OpenRead(filePath), Encoding.ASCII))
+                {
+                    this.Read(br);
+                }
+            }
+            else
+            {
+                // Create a new RAF file
+                this.Version = 1;
+                this.ManagerIndex = 0;
+            }
+        }
+
+        private void GetDataStream()
+        {
+            if (File.Exists(this.FilePath + ".dat"))
+            {
+                this._dataStream = new BinaryReader(File.OpenRead(this.FilePath + ".dat"));
+            }
+            else
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(this.FilePath));
+                this._dataStream = new BinaryReader(File.Create(this.FilePath + ".dat"));
             }
         }
 
@@ -51,12 +79,7 @@ namespace Fantome.LeagueFileManager
 
         public void Save()
         {
-            this.Save(this.FilePath);
-        }
-
-        public void Save(string filePath)
-        {
-            using (BinaryWriter bw = new BinaryWriter(new FileStream(filePath, FileMode.Create)))
+            using (BinaryWriter bw = new BinaryWriter(new FileStream(this.FilePath, FileMode.Create)))
             {
                 this.Write(bw);
             }
@@ -86,6 +109,25 @@ namespace Fantome.LeagueFileManager
             }
             PathList pathList = new PathList(this.Files);
             pathList.Write(bw);
+        }
+
+        public void AddFile(string gamePath, byte[] data)
+        {
+
+        }
+
+        public void AddFile(string gamePath, string inputFilePath)
+        {
+            this.AddFile(gamePath, File.ReadAllBytes(inputFilePath));
+        }
+
+        public void Dispose()
+        {
+            if (this._dataStream?.BaseStream != null)
+            {
+                this._dataStream.Dispose();
+                this._dataStream = null;
+            }
         }
 
         private class PathList
@@ -142,6 +184,11 @@ namespace Fantome.LeagueFileManager
         public class InvalidMagicNumberException : Exception
         {
             public InvalidMagicNumberException(uint readMagic) : base(String.Format("Invalid magic number (\"{0}\"), expected: \"{1}\".", readMagic, 0xF00EBE18)) { }
+        }
+
+        public class MissingDataFileException : Exception
+        {
+            public MissingDataFileException() : base("The data file wasn't found for the specified archive.") { }
         }
     }
 }

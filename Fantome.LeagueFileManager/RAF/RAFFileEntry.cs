@@ -22,6 +22,31 @@ namespace Fantome.LeagueFileManager
                 this._pathListIndex = br.ReadInt32();
             }
 
+            public uint GetPathHash()
+            {
+                uint hash = 0;
+                uint temp = 0;
+                string path = this.Path.ToLower(new System.Globalization.CultureInfo("en-US", false));
+                foreach (char chr in path)
+                {
+                    hash = (hash << 4) + chr;
+                    temp = hash & 0xf0000000;
+                    if (temp != 0)
+                    {
+                        hash = hash ^ (temp >> 24);
+                        hash = hash ^ temp;
+                    }
+                }
+                return hash;
+            }
+
+            public RAFFileEntry(string path, uint offset, uint length)
+            {
+                this.Path = path;
+                this.Offset = offset;
+                this.Length = length;
+            }
+
             public void AssignPath(List<string> paths)
             {
                 this.Path = paths[this._pathListIndex];

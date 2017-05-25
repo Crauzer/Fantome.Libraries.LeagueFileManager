@@ -16,8 +16,10 @@ namespace Fantome.LeagueFileManager.Tests
 
         private static void RAFTests()
         {
-            RAF raf = new RAF(@"D:\Chewy\Desktop\Archive_2.raf");
-            raf.Save(@"D:\Chewy\Desktop\Archive_3.raf");
+            using (RAF raf = new RAF(@"D:\Chewy\Desktop\Archive_2.raf"))
+            {
+
+            }
             RAF raf2 = new RAF(@"D:\Chewy\Desktop\Archive_3.raf");
         }
 
