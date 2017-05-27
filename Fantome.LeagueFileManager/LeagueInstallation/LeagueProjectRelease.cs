@@ -60,10 +60,6 @@ namespace Fantome.LeagueFileManager
                     fileEntry = this.GameManifest.GetFile(gamePath, true);
                     newFile = true;
                 }
-                fileEntry.DeployMode = deployMode;
-                fileEntry.SizeRaw = (int)fileToInstall.Length;
-                fileEntry.SizeRaw = fileEntry.SizeCompressed;
-                fileEntry.Version = FantomeFilesVersion;
                 try
                 {
                     string installPath = this.GetFileToInstallPath(fileEntry);
@@ -80,7 +76,10 @@ namespace Fantome.LeagueFileManager
                     }
                     throw e;
                 }
-
+                fileEntry.DeployMode = deployMode;
+                fileEntry.SizeRaw = (int)fileToInstall.Length;
+                fileEntry.SizeCompressed = (int)fileToInstall.Length;
+                fileEntry.Version = FantomeFilesVersion;
             }
 
             private string GetFileToInstallPath(ReleaseManifest.ReleaseManifestFileEntry fileEntry)
