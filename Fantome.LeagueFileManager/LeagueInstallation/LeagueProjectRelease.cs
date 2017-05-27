@@ -60,12 +60,15 @@ namespace Fantome.LeagueFileManager
                     fileEntry = this.GameManifest.GetFile(gamePath, true);
                     newFile = true;
                 }
+                fileEntry.DeployMode = deployMode;
+                fileEntry.SizeRaw = (int)fileToInstall.Length;
+                fileEntry.SizeCompressed = (int)fileToInstall.Length;
+                fileEntry.Version = FantomeFilesVersion;
                 try
                 {
                     string installPath = this.GetFileToInstallPath(fileEntry);
                     Directory.CreateDirectory(Path.GetDirectoryName(installPath));
                     File.Copy(filePath, installPath, true);
-                    this.GameManifest.Save();
                 }
                 catch (Exception e)
                 {
@@ -76,10 +79,38 @@ namespace Fantome.LeagueFileManager
                     }
                     throw e;
                 }
-                fileEntry.DeployMode = deployMode;
-                fileEntry.SizeRaw = (int)fileToInstall.Length;
-                fileEntry.SizeCompressed = (int)fileToInstall.Length;
-                fileEntry.Version = FantomeFilesVersion;
+                this.GameManifest.Save();
+            }
+
+            public void RevertFile(string gamePath)
+            {
+                if (this.OriginalManifest == null)
+                {
+                    throw new OriginalManifestNotLoadedException();
+                }
+                ReleaseManifest.ReleaseManifestFileEntry fileEntry = this.GameManifest.GetFile(gamePath, false);
+                string installedPath = GetFileToInstallPath(fileEntry);
+                if (File.Exists(installedPath))
+                {
+                    File.Delete(installedPath);
+                }
+                ReleaseManifest.ReleaseManifestFileEntry originalEntry = this.OriginalManifest.GetFile(gamePath, false);
+                if (originalEntry == null)
+                {
+                    // Installed file was a new file, remove it.
+                    fileEntry.Remove();
+                }
+                else
+                {
+                    // Revert original values
+                    fileEntry.DeployMode = originalEntry.DeployMode;
+                    fileEntry.LastWriteTime = originalEntry.LastWriteTime;
+                    fileEntry.MD5 = originalEntry.MD5;
+                    fileEntry.SizeCompressed = originalEntry.SizeCompressed;
+                    fileEntry.SizeRaw = originalEntry.SizeRaw;
+                    fileEntry.Version = originalEntry.Version;
+                }
+                this.GameManifest.Save();
             }
 
             private string GetFileToInstallPath(ReleaseManifest.ReleaseManifestFileEntry fileEntry)
@@ -111,6 +142,11 @@ namespace Fantome.LeagueFileManager
             public class UnsupportedDeployModeException : Exception
             {
                 public UnsupportedDeployModeException() : base("The specified deploy mode is not supported yet.") { }
+            }
+
+            public class OriginalManifestNotLoadedException : Exception
+            {
+                public OriginalManifestNotLoadedException() : base("The original manifest was not loaded.") { }
             }
         }
     }
