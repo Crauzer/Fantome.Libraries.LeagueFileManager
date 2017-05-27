@@ -33,11 +33,11 @@ namespace Fantome.LeagueFileManager
                 this.PathHash = this.GetPathHash();
             }
 
-            public byte[] GetContent(bool compressed)
+            public byte[] GetContent(bool decompress)
             {
                 this._raf.InitDataStream();
                 byte[] data;
-                if (compressed)
+                if (decompress)
                 {
                     this._raf._dataStream.Seek((int)this.Offset + 2, SeekOrigin.Begin);
                     data = new byte[this.Length - 6];

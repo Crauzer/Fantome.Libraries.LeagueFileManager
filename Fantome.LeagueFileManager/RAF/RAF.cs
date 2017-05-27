@@ -110,13 +110,13 @@ namespace Fantome.LeagueFileManager
             pathList.Write(bw);
         }
 
-        public void AddFile(string gamePath, byte[] data, bool compressed)
+        public void AddFile(string gamePath, byte[] data, bool compress)
         {
             this.InitDataStream();
             this._dataStream.Seek(0, SeekOrigin.End);
             uint fileOffset = (uint)this._dataStream.Length;
             int fileLength = data.Length;
-            if (compressed)
+            if (compress)
             {
                 this._dataStream.Write(BitConverter.GetBytes((ushort)40056), 0, 2);
                 byte[] deflateData = GetCompressedData(data);
