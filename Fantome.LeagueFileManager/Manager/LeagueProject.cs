@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace Fantome.LeagueFileManager
 {
-    public partial class LeagueInstallation
+    public partial class LeagueManager
     {
-        public class LeagueProject
+        protected class LeagueProject
         {
             public LeagueInstallation Installation { get; private set; }
             public string Name { get; private set; }
@@ -35,7 +35,7 @@ namespace Fantome.LeagueFileManager
 
             public void LoadOriginalManifests()
             {
-                foreach(LeagueProjectRelease release in this.Releases)
+                foreach (LeagueProjectRelease release in this.Releases)
                 {
                     release.LoadOriginalManifest();
                 }
@@ -72,7 +72,7 @@ namespace Fantome.LeagueFileManager
                 LeagueProjectRelease latestRelease = null;
                 foreach (LeagueProjectRelease release in this.Releases)
                 {
-                    uint releaseValue = GetReleaseValue(release.Version);
+                    uint releaseValue = LeagueInstallation.GetReleaseValue(release.Version);
                     if (latestRelease == null || releaseValue > latestRelease.VersionValue)
                     {
                         latestRelease = release;
@@ -87,5 +87,4 @@ namespace Fantome.LeagueFileManager
             }
         }
     }
-
 }

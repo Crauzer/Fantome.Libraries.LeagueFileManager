@@ -25,10 +25,11 @@ namespace Fantome.LeagueFileManager.Tests
 
         private static void LeagueInstallationTests()
         {
-            LeagueInstallation install = new LeagueInstallation(@"C:\Riot Games\League of Legends");
-            install.LoadOriginalManifests();
-            var lolilol = install.GetProject("lol_game_client").GetLatestRelease();
-            lolilol.RevertFile("LEVELS/map11/scene/textures/grnd_terrain_r.dds");
+            LeagueManager newe = new LeagueManager("C:/Riot Games/League of LEgends");
+            //LeagueInstallation install = new LeagueInstallation(@"C:\Riot Games\League of Legends");
+            //install.LoadOriginalManifests();
+            //var lolilol = install.GetProject("lol_game_client").GetLatestRelease();
+            //lolilol.RevertFile("LEVELS/map11/scene/textures/grnd_terrain_r.dds");
         }
     }
 }

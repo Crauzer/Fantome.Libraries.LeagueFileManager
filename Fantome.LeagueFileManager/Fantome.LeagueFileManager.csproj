@@ -20,6 +20,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -40,9 +42,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="LeagueInstallation\LeagueInstallation.cs" />
-    <Compile Include="LeagueInstallation\LeagueProject.cs" />
-    <Compile Include="LeagueInstallation\LeagueProjectRelease.cs" />
+    <Compile Include="Manager\LeagueInstallation.cs" />
+    <Compile Include="Manager\LeagueProject.cs" />
+    <Compile Include="Manager\LeagueProjectRelease.cs" />
+    <Compile Include="Manager\LeagueManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReleaseManifest\ReleaseManifest.cs" />
     <Compile Include="ReleaseManifest\ReleaseManifestFileEntry.cs" />

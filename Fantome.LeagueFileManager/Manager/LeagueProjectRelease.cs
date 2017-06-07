@@ -3,21 +3,22 @@ using System.IO;
 
 namespace Fantome.LeagueFileManager
 {
-    public partial class LeagueInstallation
+    public partial class LeagueManager
     {
-        public class LeagueProjectRelease
+        protected class LeagueProjectRelease
         {
             public LeagueProject Project { get; private set; }
             public string Version { get; private set; }
             public uint VersionValue { get; private set; }
             public ReleaseManifest GameManifest { get; private set; }
             public ReleaseManifest OriginalManifest { get; private set; }
+            public bool HasChanged { get; private set; }
 
             public LeagueProjectRelease(LeagueProject project, string version)
             {
                 this.Project = project;
                 this.Version = version;
-                this.VersionValue = GetReleaseValue(version);
+                this.VersionValue = LeagueInstallation.GetReleaseValue(version);
                 string manifestPath = this.GetFolder() + "/releasemanifest";
                 if (File.Exists(manifestPath))
                 {
@@ -46,40 +47,61 @@ namespace Fantome.LeagueFileManager
                 return String.Format("{0}/releases/{1}", this.Project.GetFolder(), this.Version);
             }
 
-            public void InstallFile(string gamePath, ReleaseManifest.DeployMode deployMode, string filePath)
+            public void InstallFile(string gamePath, string filePath, byte[] md5)
+            {
+                ReleaseManifest.ReleaseManifestFileEntry fileEntry = this.GameManifest.GetFile(gamePath, false);
+                ReleaseManifest.DeployMode deployMode = null;
+                if (fileEntry == null)
+                {
+                    deployMode = fileEntry.DeployMode;
+                }
+            }
+
+            public void InstallFile(string gamePath, string filePath, byte[] md5, ReleaseManifest.DeployMode deployMode)
             {
                 FileInfo fileToInstall = new FileInfo(filePath);
                 if (!fileToInstall.Exists)
                 {
                     throw new FileToInstallNotFoundException();
                 }
-                bool newFile = false;
+
+                // Getting the matching file entry (null if new file)
                 ReleaseManifest.ReleaseManifestFileEntry fileEntry = this.GameManifest.GetFile(gamePath, false);
+
+                // Installing file
+                string installPath = this.GetFileToInstallPath(gamePath, deployMode, LeagueInstallation.FantomeFilesVersion);
+                Directory.CreateDirectory(Path.GetDirectoryName(installPath));
+                if ((fileEntry != null) && deployMode == ReleaseManifest.DeployMode.Deployed)
+                {
+                    // Backup deployed file
+                    BackupFile(gamePath, installPath);
+                }
+                File.Copy(filePath, installPath, true);
+
+                // Setting manifest values
                 if (fileEntry == null)
                 {
                     fileEntry = this.GameManifest.GetFile(gamePath, true);
-                    newFile = true;
                 }
                 fileEntry.DeployMode = deployMode;
                 fileEntry.SizeRaw = (int)fileToInstall.Length;
-                fileEntry.SizeCompressed = (int)fileToInstall.Length;
-                fileEntry.Version = FantomeFilesVersion;
-                try
+                fileEntry.SizeRaw = fileEntry.SizeCompressed;
+                fileEntry.Version = LeagueInstallation.FantomeFilesVersion;
+                if (md5 != null)
                 {
-                    string installPath = this.GetFileToInstallPath(fileEntry);
-                    Directory.CreateDirectory(Path.GetDirectoryName(installPath));
-                    File.Copy(filePath, installPath, true);
+                    fileEntry.MD5 = md5;
                 }
-                catch (Exception e)
-                {
-                    // In case installing a new file fails, remove it from the manifest (since it's not installed).
-                    if (newFile)
-                    {
-                        fileEntry.Remove();
-                    }
-                    throw e;
-                }
-                this.GameManifest.Save();
+                this.HasChanged = true;
+            }
+
+            private void BackupFile(string gamePath, string filePath)
+            {
+
+            }
+
+            private void RestoreFile(string gamePath, string filePath)
+            {
+
             }
 
             public void RevertFile(string gamePath)
@@ -89,7 +111,7 @@ namespace Fantome.LeagueFileManager
                     throw new OriginalManifestNotLoadedException();
                 }
                 ReleaseManifest.ReleaseManifestFileEntry fileEntry = this.GameManifest.GetFile(gamePath, false);
-                string installedPath = GetFileToInstallPath(fileEntry);
+                string installedPath = GetFileToInstallPath(gamePath, fileEntry.DeployMode, LeagueInstallation.FantomeFilesVersion);
                 if (File.Exists(installedPath))
                 {
                     File.Delete(installedPath);
@@ -110,18 +132,18 @@ namespace Fantome.LeagueFileManager
                     fileEntry.SizeRaw = originalEntry.SizeRaw;
                     fileEntry.Version = originalEntry.Version;
                 }
-                this.GameManifest.Save();
+                this.HasChanged = true;
             }
 
-            private string GetFileToInstallPath(ReleaseManifest.ReleaseManifestFileEntry fileEntry)
+            private string GetFileToInstallPath(string fileFullPath, ReleaseManifest.DeployMode deployMode, uint version)
             {
-                if (fileEntry.DeployMode == ReleaseManifest.DeployMode.Managed)
+                if (deployMode == ReleaseManifest.DeployMode.Managed)
                 {
-                    return String.Format("{0}/managedfiles/{1}/{2}", this.Project.GetFolder(), LeagueInstallation.GetReleaseString(fileEntry.Version), fileEntry.GetFullPath());
+                    return String.Format("{0}/managedfiles/{1}/{2}", this.Project.GetFolder(), LeagueInstallation.GetReleaseString(version), fileFullPath);
                 }
-                else if (fileEntry.DeployMode == ReleaseManifest.DeployMode.Deployed)
+                else if (deployMode == ReleaseManifest.DeployMode.Deployed)
                 {
-                    return String.Format("{0}/releases/{1}/deploy/{2}", this.Project.GetFolder(), this.Version, fileEntry.GetFullPath());
+                    return String.Format("{0}/releases/{1}/deploy/{2}", this.Project.GetFolder(), this.Version, fileFullPath);
                 }
                 else
                 {

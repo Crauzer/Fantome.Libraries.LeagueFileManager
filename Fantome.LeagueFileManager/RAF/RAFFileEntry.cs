@@ -53,7 +53,7 @@ namespace Fantome.LeagueFileManager
                 }
             }
 
-            public uint GetPathHash()
+            private uint GetPathHash()
             {
                 uint hash = 0;
                 uint temp = 0;
