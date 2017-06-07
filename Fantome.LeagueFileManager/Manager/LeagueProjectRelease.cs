@@ -47,17 +47,7 @@ namespace Fantome.LeagueFileManager
                 return String.Format("{0}/releases/{1}", this.Project.GetFolder(), this.Version);
             }
 
-            public void InstallFile(string gamePath, string filePath, byte[] md5)
-            {
-                ReleaseManifest.ReleaseManifestFileEntry fileEntry = this.GameManifest.GetFile(gamePath, false);
-                ReleaseManifest.DeployMode deployMode = null;
-                if (fileEntry == null)
-                {
-                    deployMode = fileEntry.DeployMode;
-                }
-            }
-
-            public void InstallFile(string gamePath, string filePath, byte[] md5, ReleaseManifest.DeployMode deployMode)
+            public void InstallFile(string gamePath, string filePath, ReleaseManifest.DeployMode deployMode)
             {
                 FileInfo fileToInstall = new FileInfo(filePath);
                 if (!fileToInstall.Exists)
@@ -87,10 +77,6 @@ namespace Fantome.LeagueFileManager
                 fileEntry.SizeRaw = (int)fileToInstall.Length;
                 fileEntry.SizeRaw = fileEntry.SizeCompressed;
                 fileEntry.Version = LeagueInstallation.FantomeFilesVersion;
-                if (md5 != null)
-                {
-                    fileEntry.MD5 = md5;
-                }
                 this.HasChanged = true;
             }
 
