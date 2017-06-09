@@ -75,6 +75,7 @@ namespace Fantome.LeagueFileManager
                 // Sometimes the folder in releases can be called "installer"
                 return (releaseString.Split('.').Length == 4);
             }
+
             public static uint GetReleaseValue(string releaseString)
             {
                 string[] releaseValues = releaseString.Split('.');
@@ -84,18 +85,22 @@ namespace Fantome.LeagueFileManager
                 }
                 return (uint)((Byte.Parse(releaseValues[0]) << 24) | (Byte.Parse(releaseValues[1]) << 16) | (Byte.Parse(releaseValues[2]) << 8) | Byte.Parse(releaseValues[3]));
             }
+
             public static string GetReleaseString(uint releaseValue)
             {
                 return String.Format("{0}.{1}.{2}.{3}", (releaseValue & 0xFF000000) >> 24, (releaseValue & 0x00FF0000) >> 16, (releaseValue & 0x0000FF00) >> 8, releaseValue & 0x000000FF);
             }
+
             public class InvalidRADSInstallationException : Exception
             {
                 public InvalidRADSInstallationException(string message) : base("The specified folder does not lead to a valid RADS installation. " + message) { }
             }
+
             public class InvalidReleaseVersionToParseException : Exception
             {
                 public InvalidReleaseVersionToParseException() : base("The specified release version string is not valid.") { }
             }
+
             public class NoValidProjectException : Exception
             {
                 public NoValidProjectException() : base("There is no valid project in the specified LoL Installation.") { }
