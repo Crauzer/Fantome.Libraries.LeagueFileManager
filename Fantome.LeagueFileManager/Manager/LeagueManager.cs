@@ -18,8 +18,6 @@ namespace Fantome.LeagueFileManager
             this.DeployRules = new LeagueDeployRules(LeagueFileDeployMode.Managed);
         }
 
-
-
         public void Dispose()
         {
             foreach (LeagueProject project in this.Installation.Projects)
@@ -33,9 +31,5 @@ namespace Fantome.LeagueFileManager
                 }
             }
         }
-
-       
-
-
     }
 }
