@@ -79,7 +79,7 @@ namespace Fantome.LeagueFileManager
                 }
                 fileEntry.DeployMode = deployMode;
                 fileEntry.SizeRaw = (int)fileToInstall.Length;
-                fileEntry.SizeRaw = fileEntry.SizeCompressed;
+                fileEntry.SizeCompressed = fileEntry.SizeRaw;
                 fileEntry.Version = LeagueInstallation.FantomeFilesVersion;
                 this.HasChanged = true;
             }
