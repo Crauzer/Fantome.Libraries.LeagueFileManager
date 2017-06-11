@@ -32,7 +32,10 @@ namespace Fantome.LeagueFileManager
 
             public void LoadOriginalManifest()
             {
-                string originalManifestFolder = String.Format("{0}manifests/{1}/{2}", AppDomain.CurrentDomain.BaseDirectory, this.Project.Name, this.Version);
+                string originalManifestFolder = String.Format("{0}lol-manager/manifests/{1}/{2}",
+                    AppDomain.CurrentDomain.BaseDirectory,
+                    this.Project.Name,
+                    this.Version);
                 string manifestPath = originalManifestFolder + "/releasemanifest";
                 Directory.CreateDirectory(originalManifestFolder);
                 if (!File.Exists(manifestPath))
@@ -47,7 +50,7 @@ namespace Fantome.LeagueFileManager
                 return String.Format("{0}/releases/{1}", this.Project.GetFolder(), this.Version);
             }
 
-            public void InstallFile(string gamePath, string filePath, ReleaseManifest.DeployMode deployMode)
+            public void InstallFile(string gamePath, string filePath, LeagueDeployRules deployRules)
             {
                 FileInfo fileToInstall = new FileInfo(filePath);
                 if (!fileToInstall.Exists)
@@ -55,8 +58,9 @@ namespace Fantome.LeagueFileManager
                     throw new FileToInstallNotFoundException();
                 }
 
-                // Getting the matching file entry (null if new file)
+                // Getting the matching file entry (null if new file) and finding the deploy mode to use
                 ReleaseManifest.ReleaseManifestFileEntry fileEntry = this.GameManifest.GetFile(gamePath, false);
+                ReleaseManifest.DeployMode deployMode = deployRules.GetTargetDeployMode(this.Project.Name, fileEntry);
 
                 // Installing file
                 string installPath = this.GetFileToInstallPath(gamePath, deployMode, LeagueInstallation.FantomeFilesVersion);
@@ -64,7 +68,7 @@ namespace Fantome.LeagueFileManager
                 if ((fileEntry != null) && deployMode == ReleaseManifest.DeployMode.Deployed)
                 {
                     // Backup deployed file
-                    BackupFile(gamePath, installPath);
+                    BackupFile(fileEntry, installPath);
                 }
                 File.Copy(filePath, installPath, true);
 
@@ -80,14 +84,19 @@ namespace Fantome.LeagueFileManager
                 this.HasChanged = true;
             }
 
-            private void BackupFile(string gamePath, string filePath)
+            private void BackupFile(ReleaseManifest.ReleaseManifestFileEntry fileEntry, string filePath)
             {
-
+                File.Copy(filePath, this.GetBackupPath(fileEntry), false);
             }
 
-            private void RestoreFile(string gamePath, string filePath)
+            private void RestoreFile(ReleaseManifest.ReleaseManifestFileEntry fileEntry, string filePath)
             {
+                File.Copy(this.GetBackupPath(fileEntry), filePath, true);
+            }
 
+            private string GetBackupPath(ReleaseManifest.ReleaseManifestFileEntry fileEntry)
+            {
+                return String.Format("{0}lol-manager/backup/{1}/{2}/{3}", AppDomain.CurrentDomain.BaseDirectory, this.Project.Name, LeagueInstallation.GetReleaseString(fileEntry.Version), fileEntry.GetFullPath());
             }
 
             public void RevertFile(string gamePath)
@@ -110,6 +119,11 @@ namespace Fantome.LeagueFileManager
                 }
                 else
                 {
+                    // Restore original file if necessary
+                    if (originalEntry.DeployMode == ReleaseManifest.DeployMode.Deployed)
+                    {
+                        RestoreFile(originalEntry, installedPath);
+                    }
                     // Revert original values
                     fileEntry.DeployMode = originalEntry.DeployMode;
                     fileEntry.LastWriteTime = originalEntry.LastWriteTime;
