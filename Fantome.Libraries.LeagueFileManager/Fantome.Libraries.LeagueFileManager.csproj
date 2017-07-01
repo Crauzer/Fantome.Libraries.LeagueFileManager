@@ -4,16 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{63649B5B-C62A-4AA0-9779-0CB803DD7FD3}</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>Fantome.LeagueFileManager.Tests</RootNamespace>
-    <AssemblyName>Fantome.LeagueFileManager.Tests</AssemblyName>
+    <ProjectGuid>{E401A240-8404-414A-9D74-3C6FE8C61B34}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Fantome.Libraries.LeagueFileManager</RootNamespace>
+    <AssemblyName>Fantome.Libraries.LeagueFileManager</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -21,9 +20,10 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -42,17 +42,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
+    <Compile Include="Manager\LeagueDeployRules.cs" />
+    <Compile Include="Manager\LeagueInstallation.cs" />
+    <Compile Include="Manager\LeagueProject.cs" />
+    <Compile Include="Manager\LeagueProjectRelease.cs" />
+    <Compile Include="Manager\LeagueManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Fantome.LeagueFileManager\Fantome.LeagueFileManager.csproj">
-      <Project>{e401a240-8404-414a-9d74-3c6fe8c61b34}</Project>
-      <Name>Fantome.LeagueFileManager</Name>
-    </ProjectReference>
+    <Compile Include="ReleaseManifest\ReleaseManifest.cs" />
+    <Compile Include="ReleaseManifest\ReleaseManifestFileEntry.cs" />
+    <Compile Include="ReleaseManifest\ReleaseManifestFolderEntry.cs" />
+    <Compile Include="RAF\RAFFileEntry.cs" />
+    <Compile Include="RAF\RAF.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

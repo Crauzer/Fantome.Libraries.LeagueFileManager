@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace Fantome.LeagueFileManager
+namespace Fantome.Libraries.LeagueFileManager
 {
     public partial class RAF
     {

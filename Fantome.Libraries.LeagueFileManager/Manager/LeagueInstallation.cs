@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 
-namespace Fantome.LeagueFileManager
+namespace Fantome.Libraries.LeagueFileManager
 {
     public partial class LeagueManager
     {

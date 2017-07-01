@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26403.7
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fantome.LeagueFileManager", "Fantome.LeagueFileManager\Fantome.LeagueFileManager.csproj", "{E401A240-8404-414A-9D74-3C6FE8C61B34}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fantome.Libraries.LeagueFileManager", "Fantome.Libraries.LeagueFileManager\Fantome.Libraries.LeagueFileManager.csproj", "{E401A240-8404-414A-9D74-3C6FE8C61B34}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fantome.LeagueFileManager.Tests", "Fantome.LeagueFileManager.Tests\Fantome.LeagueFileManager.Tests.csproj", "{63649B5B-C62A-4AA0-9779-0CB803DD7FD3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fantome.Libraries.LeagueFileManager.Tests", "Fantome.Libraries.LeagueFileManager.Tests\Fantome.Libraries.LeagueFileManager.Tests.csproj", "{63649B5B-C62A-4AA0-9779-0CB803DD7FD3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

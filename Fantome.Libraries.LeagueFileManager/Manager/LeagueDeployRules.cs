@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Fantome.LeagueFileManager
+namespace Fantome.Libraries.LeagueFileManager
 {
     public partial class LeagueManager
     {

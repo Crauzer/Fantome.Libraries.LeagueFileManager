@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace Fantome.LeagueFileManager.Tests
+namespace Fantome.Libraries.LeagueFileManager.Tests
 {
     class Program
     {
@@ -32,7 +32,8 @@ namespace Fantome.LeagueFileManager.Tests
                 foreach (string file in Directory.EnumerateFiles(@"D:\Chewy\Desktop\Mystic Rift", "*.*", SearchOption.AllDirectories))
                 {
                     string gamePath = file.Replace(@"D:\Chewy\Desktop\Mystic Rift\lol_game_client\", "").Replace("\\", "/");
-                    manager.InstallFile("lol_game_client", gamePath, file);
+                    //manager.InstallFile("lol_game_client", gamePath, file);
+                    manager.RevertFile("lol_game_client", gamePath);
                 }
             }
         }

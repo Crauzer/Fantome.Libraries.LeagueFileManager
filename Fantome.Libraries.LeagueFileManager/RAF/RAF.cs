@@ -4,7 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 
-namespace Fantome.LeagueFileManager
+namespace Fantome.Libraries.LeagueFileManager
 {
     public partial class RAF : IDisposable
     {
