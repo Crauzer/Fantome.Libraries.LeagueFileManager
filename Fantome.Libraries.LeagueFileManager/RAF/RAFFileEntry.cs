@@ -12,7 +12,7 @@ namespace Fantome.Libraries.LeagueFileManager
             public uint Offset { get; private set; }
             public uint Length { get; private set; }
             public uint PathHash { get; private set; }
-            private int _pathListIndex;
+            public int PathListIndex { get; set; }
             private RAF _raf;
 
             public RAFFileEntry(RAF raf, BinaryReader br)
@@ -21,7 +21,7 @@ namespace Fantome.Libraries.LeagueFileManager
                 this.PathHash = br.ReadUInt32();
                 this.Offset = br.ReadUInt32();
                 this.Length = br.ReadUInt32();
-                this._pathListIndex = br.ReadInt32();
+                this.PathListIndex = br.ReadInt32();
             }
 
             public RAFFileEntry(RAF raf, string path, uint offset, uint length)
@@ -73,12 +73,7 @@ namespace Fantome.Libraries.LeagueFileManager
 
             public void AssignPath(List<string> paths)
             {
-                this.Path = paths[this._pathListIndex];
-            }
-
-            public void AssignPathListIndex(int pathListIndex)
-            {
-                this._pathListIndex = pathListIndex;
+                this.Path = paths[this.PathListIndex];
             }
 
             public void Write(BinaryWriter bw)
@@ -86,7 +81,7 @@ namespace Fantome.Libraries.LeagueFileManager
                 bw.Write(this.PathHash);
                 bw.Write(this.Offset);
                 bw.Write(this.Length);
-                bw.Write(this._pathListIndex);
+                bw.Write(this.PathListIndex);
             }
 
             public int CompareTo(RAFFileEntry other)

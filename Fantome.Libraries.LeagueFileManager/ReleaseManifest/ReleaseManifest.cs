@@ -5,6 +5,9 @@ using System.Text;
 
 namespace Fantome.Libraries.LeagueFileManager
 {
+    /// <summary>
+    /// League of Legends Release Manifest File containing data (files, folders) from a specific release.
+    /// </summary>
     public partial class ReleaseManifest
     {
         public string FilePath { get; private set; }
@@ -15,6 +18,10 @@ namespace Fantome.Libraries.LeagueFileManager
         private List<string> Names = new List<string>();
         public ReleaseManifestFolderEntry Project { get; private set; }
 
+        /// <summary>
+        /// Parses a League of Legends Release Manifest File at <paramref name="filePath"/>.
+        /// </summary>
+        /// <param name="filePath">Path to the Release Manifest</param>
         public ReleaseManifest(string filePath)
         {
             this.FilePath = filePath;
@@ -24,6 +31,10 @@ namespace Fantome.Libraries.LeagueFileManager
             }
         }
 
+        /// <summary>
+        /// Parses Release Manifest File content from a previously initialized <see cref="BinaryReader"/>.
+        /// </summary>
+        /// <param name="br"><see cref="BinaryReader"/> instance holding Release Manifest File content.</param>
         private void Read(BinaryReader br)
         {
             string readMagic = Encoding.ASCII.GetString(br.ReadBytes(4));
@@ -86,6 +97,12 @@ namespace Fantome.Libraries.LeagueFileManager
             this.Project = folders[0];
         }
 
+        /// <summary>
+        /// Finds a <see cref="ReleaseManifestFolderEntry"/> in the current <see cref="ReleaseManifest"/>.
+        /// </summary>
+        /// <param name="path">Path to the folder you want to get.</param>
+        /// <param name="createIfNotFound">Create the folder if it was not found.</param>
+        /// <example>GetFolder("LEVELS/map11/scene", false)</example>
         public ReleaseManifestFolderEntry GetFolder(string path, bool createIfNotFound)
         {
             if (path == "")
@@ -118,6 +135,13 @@ namespace Fantome.Libraries.LeagueFileManager
             return baseFolder;
         }
 
+        /// <summary>
+        /// Finds a <see cref="ReleaseManifestFileEntry"/> in the current <see cref="ReleaseManifest"/>.
+        /// </summary>
+        /// <param name="path">Path to the file you want to get.</param>
+        /// <param name="createIfNotFound">Create the folder if it was not found.</param>
+        /// <example>GetFile("LEVELS/map11/scene/room.wgeo", false)</example>
+        /// <returns>The <see cref="ReleaseManifestFileEntry"/> you asked for.</returns>
         public ReleaseManifestFileEntry GetFile(string path, bool createIfNotFound)
         {
             string[] folders = path.Split('/');
@@ -139,6 +163,9 @@ namespace Fantome.Libraries.LeagueFileManager
             }
         }
 
+        /// <summary>
+        /// Returns the position of the specified name in <see cref="Names"/>. If the specified name was not found in the list, it is added to it.
+        /// </summary>
         private int GetNameIndex(string name)
         {
             int gotIndex = this.Names.IndexOf(name);
@@ -150,11 +177,18 @@ namespace Fantome.Libraries.LeagueFileManager
             return gotIndex;
         }
 
+        /// <summary>
+        /// Saves the current <see cref="ReleaseManifest"/> at the initially specified path.
+        /// </summary>
         public void Save()
         {
             this.Save(this.FilePath);
         }
 
+        /// <summary>
+        /// Saves the current <see cref="ReleaseManifest"/> at the specified path.
+        /// </summary>
+        /// <param name="filePath">Path where to save the file.</param>
         public void Save(string filePath)
         {
             using (BinaryWriter bw = new BinaryWriter(new FileStream(filePath, FileMode.Create)))
@@ -163,6 +197,10 @@ namespace Fantome.Libraries.LeagueFileManager
             }
         }
 
+        /// <summary>
+        /// Writes the current <see cref="ReleaseManifest"/> in a previously initialized <see cref="BinaryWriter"/>.
+        /// </summary>
+        /// <param name="bw"><see cref="BinaryWriter"/> instance where to write file data.</param>
         private void Write(BinaryWriter bw)
         {
             int folderCount = 1 + GetFolderCount(this.Project);
@@ -190,6 +228,9 @@ namespace Fantome.Libraries.LeagueFileManager
             }
         }
 
+        /// <summary>
+        /// Returns the number of folders and subfolders included in the specified <see cref="ReleaseManifestFolderEntry"/>.
+        /// </summary>
         private static int GetFolderCount(ReleaseManifestFolderEntry folderEntry)
         {
             int folderCount = folderEntry.Folders.Count;
@@ -199,6 +240,10 @@ namespace Fantome.Libraries.LeagueFileManager
             }
             return folderCount;
         }
+
+        /// <summary>
+        /// Returns the number of files found in the specified <see cref="ReleaseManifestFolderEntry"/> and all of its subfolders.
+        /// </summary>
         private static int GetFileCount(ReleaseManifestFolderEntry folderEntry)
         {
             int fileCount = folderEntry.Files.Count;
@@ -208,6 +253,11 @@ namespace Fantome.Libraries.LeagueFileManager
             }
             return fileCount;
         }
+
+        /// <summary>
+        /// Sets the appropriate <see cref="ReleaseManifestFolderEntry.SubFolderStartIndex"/> for the specified <see cref="ReleaseManifestFolderEntry"/> and all of its subfolders.
+        /// </summary>
+        /// <param name="index">Start index.</param>
         private static int SetFolderIndexes(ReleaseManifestFolderEntry baseFolder, int index)
         {
             foreach (ReleaseManifestFolderEntry subFolderEntry in baseFolder.Folders)
@@ -217,6 +267,11 @@ namespace Fantome.Libraries.LeagueFileManager
             }
             return index;
         }
+
+        /// <summary>
+        /// Sets the appropriate <see cref="ReleaseManifestFolderEntry.FileListStartIndex"/> for the specified <see cref="ReleaseManifestFolderEntry"/> and all of its subfolders.
+        /// </summary>
+        /// <param name="index">Start index.</param>
         private static int SetFileIndexes(ReleaseManifestFolderEntry baseFolder, int index)
         {
             foreach (ReleaseManifestFolderEntry subFolderEntry in baseFolder.Folders)
@@ -226,6 +281,11 @@ namespace Fantome.Libraries.LeagueFileManager
             }
             return index;
         }
+
+        /// <summary>
+        /// Returns the length in bytes of the <see cref="Names"/> list.
+        /// </summary>
+        /// <returns></returns>
         private int GetNameSectionLength()
         {
             int length = 0;
@@ -235,6 +295,11 @@ namespace Fantome.Libraries.LeagueFileManager
             }
             return length;
         }
+
+        /// <summary>
+        /// Writes the content of the specified <see cref="ReleaseManifestFolderEntry"/> and all of its subfolders.
+        /// </summary>
+        /// <param name="bw">Previously initialized <see cref="BinaryWriter"/> where to write <paramref name="baseFolder"/> content.</param>
         private static void WriteSubFolderEntries(ReleaseManifestFolderEntry baseFolder, BinaryWriter bw)
         {
             foreach (ReleaseManifestFolderEntry folderEntry in baseFolder.Folders)
@@ -246,6 +311,11 @@ namespace Fantome.Libraries.LeagueFileManager
                 WriteSubFolderEntries(folderEntry, bw);
             }
         }
+
+        /// <summary>
+        /// Writes the content of the files from the specified <see cref="ReleaseManifestFolderEntry"/> and all of its subfolders.
+        /// </summary>
+        /// <param name="bw">Previously initialized <see cref="BinaryWriter"/> where to write <paramref name="baseFolder"/> files content.</param>
         private static void WriteFileEntries(ReleaseManifestFolderEntry baseFolder, BinaryWriter bw)
         {
             foreach (ReleaseManifestFileEntry fileEntry in baseFolder.Files)
@@ -258,6 +328,9 @@ namespace Fantome.Libraries.LeagueFileManager
             }
         }
 
+        /// <summary>
+        /// Indicates how a file is deployed in the League of Legends installation.
+        /// </summary>
         public enum DeployMode : uint
         {
             Deployed = 0,
@@ -267,11 +340,17 @@ namespace Fantome.Libraries.LeagueFileManager
             RAFCompressed = 22
         }
 
+        /// <summary>
+        /// Occurs when the read magic number is not correct.
+        /// </summary>
         public class InvalidMagicNumberException : Exception
         {
             public InvalidMagicNumberException(string readMagic) : base(String.Format("Invalid magic number (\"{0}\"), expected: \"RLSM\".", readMagic)) { }
         }
 
+        /// <summary>
+        /// Occurs when the <see cref="Names"/> could not be read correctly.
+        /// </summary>
         public class InvalidNamesListException : Exception
         {
             public InvalidNamesListException() : base("Names counts don't match.") { }

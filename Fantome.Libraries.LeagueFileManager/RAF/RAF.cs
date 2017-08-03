@@ -90,7 +90,7 @@ namespace Fantome.Libraries.LeagueFileManager
             this.Files.Sort();
             for (int i = 0; i < this.Files.Count; i++)
             {
-                this.Files[i].AssignPathListIndex(i);
+                this.Files[i].PathListIndex = i;
             }
 
             bw.Write(0x18be0ef0);

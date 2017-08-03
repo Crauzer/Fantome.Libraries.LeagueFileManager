@@ -5,6 +5,9 @@ namespace Fantome.Libraries.LeagueFileManager
 {
     public partial class ReleaseManifest
     {
+        /// <summary>
+        /// Contains information about files (name, version, size)
+        /// </summary>
         public class ReleaseManifestFileEntry
         {
             public string Name { get; set; }
@@ -29,7 +32,6 @@ namespace Fantome.Libraries.LeagueFileManager
                                 _MD5[i] = value[i];
                             }
                         }
-
                     }
                 }
             }
@@ -39,6 +41,10 @@ namespace Fantome.Libraries.LeagueFileManager
             public DateTime LastWriteTime { get; set; } = new DateTime();
             public ReleaseManifestFolderEntry Folder { get; set; }
 
+            /// <summary>
+            /// Parses Release Manifest File Entry content from a previously initialized <see cref="BinaryReader"/>
+            /// </summary>
+            /// <param name="br"><see cref="BinaryReader"/> instance holding Release Manifest File content</param>
             public ReleaseManifestFileEntry(BinaryReader br)
             {
                 this.NameIndex = br.ReadInt32();
