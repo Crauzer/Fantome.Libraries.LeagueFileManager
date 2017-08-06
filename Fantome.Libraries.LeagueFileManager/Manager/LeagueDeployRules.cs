@@ -41,8 +41,8 @@ namespace Fantome.Libraries.LeagueFileManager
                 {
                     switch (originalFileEntry.DeployMode)
                     {
-                        case ReleaseManifest.DeployMode.Deployed:
-                            originalDeployMode = LeagueFileDeployMode.Deployed;
+                        case ReleaseManifest.DeployMode.Deployed0:
+                            originalDeployMode = LeagueFileDeployMode.Deployed0;
                             break;
                         case ReleaseManifest.DeployMode.Managed:
                             originalDeployMode = LeagueFileDeployMode.Managed;
@@ -53,8 +53,8 @@ namespace Fantome.Libraries.LeagueFileManager
                         case ReleaseManifest.DeployMode.RAFRaw:
                             originalDeployMode = LeagueFileDeployMode.RAFRaw;
                             break;
-                        case ReleaseManifest.DeployMode.SolutionDeployed:
-                            originalDeployMode = LeagueFileDeployMode.SolutionDeployed;
+                        case ReleaseManifest.DeployMode.Deployed4:
+                            originalDeployMode = LeagueFileDeployMode.Deployed4;
                             break;
                     }
                 }
@@ -66,16 +66,16 @@ namespace Fantome.Libraries.LeagueFileManager
                 LeagueFileDeployMode targetDeployMode = GetTargetLeagueDeployMode(project, originalFileEntry);
                 switch (targetDeployMode)
                 {
-                    case LeagueFileDeployMode.Deployed:
-                        return ReleaseManifest.DeployMode.Deployed;
+                    case LeagueFileDeployMode.Deployed0:
+                        return ReleaseManifest.DeployMode.Deployed0;
                     case LeagueFileDeployMode.Managed:
                         return ReleaseManifest.DeployMode.Managed;
                     case LeagueFileDeployMode.RAFCompressed:
                         return ReleaseManifest.DeployMode.RAFCompressed;
                     case LeagueFileDeployMode.RAFRaw:
                         return ReleaseManifest.DeployMode.RAFRaw;
-                    case LeagueFileDeployMode.SolutionDeployed:
-                        return ReleaseManifest.DeployMode.SolutionDeployed;
+                    case LeagueFileDeployMode.Deployed4:
+                        return ReleaseManifest.DeployMode.Deployed4;
                     default:
                         throw new InvalidTargetDeployModeException();
                 }
@@ -138,8 +138,8 @@ namespace Fantome.Libraries.LeagueFileManager
             RAFRaw,
             RAFCompressed,
             Managed,
-            Deployed,
-            SolutionDeployed
+            Deployed0,
+            Deployed4
         }
 
         public class InvalidTargetDeployModeException : Exception

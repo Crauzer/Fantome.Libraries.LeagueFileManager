@@ -6,14 +6,31 @@ namespace Fantome.Libraries.LeagueFileManager
     public partial class ReleaseManifest
     {
         /// <summary>
-        /// Contains information about files (name, version, size)
+        /// Contains information about files (name, version, size).
         /// </summary>
         public class ReleaseManifestFileEntry
         {
+            /// <summary>
+            /// Name of the current <see cref="ReleaseManifestFileEntry"/>.
+            /// </summary>
+            /// <example>room.wgeo</example>
             public string Name { get; set; }
+
+            /// <summary>
+            /// Position of the <see cref="Name"/> in <see cref="Names"/>.
+            /// </summary>
             public int NameIndex { get; private set; }
+
+            /// <summary>
+            /// File version in number.
+            /// </summary>
             public uint Version { get; set; }
+
             private byte[] _MD5;
+
+            /// <summary>
+            /// MD5 checksum of the current <see cref="ReleaseManifestFileEntry"/> (uncompressed).
+            /// </summary>
             public byte[] MD5
             {
                 get { return _MD5; }
@@ -35,16 +52,36 @@ namespace Fantome.Libraries.LeagueFileManager
                     }
                 }
             }
+
+            /// <summary>
+            /// Deploy Mode of the current <see cref="ReleaseManifestFileEntry"/>.
+            /// </summary>
             public DeployMode DeployMode { get; set; }
+
+            /// <summary>
+            /// Size of the current <see cref="ReleaseManifestFileEntry"/>.
+            /// </summary>
             public int SizeRaw { get; set; }
+
+            /// <summary>
+            /// Size of the current <see cref="ReleaseManifestFileEntry"/> compressed in zlib.
+            /// </summary>
             public int SizeCompressed { get; set; }
+
+            /// <summary>
+            /// Last write time of the current <see cref="ReleaseManifestFileEntry"/>.
+            /// </summary>
             public DateTime LastWriteTime { get; set; } = new DateTime();
+
+            /// <summary>
+            /// The <see cref="ReleaseManifestFolderEntry"/> the current <see cref="ReleaseManifestFileEntry"/> belongs to.
+            /// </summary>
             public ReleaseManifestFolderEntry Folder { get; set; }
 
             /// <summary>
-            /// Parses Release Manifest File Entry content from a previously initialized <see cref="BinaryReader"/>
+            /// Parses Release Manifest File Entry content from a previously initialized <see cref="BinaryReader"/>.
             /// </summary>
-            /// <param name="br"><see cref="BinaryReader"/> instance holding Release Manifest File content</param>
+            /// <param name="br"><see cref="BinaryReader"/> instance holding Release Manifest File content</param>.
             public ReleaseManifestFileEntry(BinaryReader br)
             {
                 this.NameIndex = br.ReadInt32();
@@ -61,6 +98,12 @@ namespace Fantome.Libraries.LeagueFileManager
                 }
             }
 
+            /// <summary>
+            /// Creates a new <see cref="ReleaseManifestFileEntry"/> from its name and its folder.
+            /// </summary>
+            /// <param name="name">Name of the file</param>
+            /// <param name="nameIndex">Position of the name of the file in <see cref="Names"/>.</param>
+            /// <param name="folder"><see cref="ReleaseManifestFolderEntry"/> the new file belongs to.</param>
             public ReleaseManifestFileEntry(string name, int nameIndex, ReleaseManifestFolderEntry folder)
             {
                 this.Name = name;
@@ -69,6 +112,10 @@ namespace Fantome.Libraries.LeagueFileManager
                 this.Folder = folder;
             }
 
+            /// <summary>
+            /// Writes content from the current <see cref="ReleaseManifestFileEntry"/> in a previously initialized <see cref="BinaryWriter"/>.
+            /// </summary>
+            /// <param name="bw"><see cref="BinaryWriter"/> instance where to write data.</param>
             public void Write(BinaryWriter bw)
             {
                 bw.Write(this.NameIndex);
@@ -87,6 +134,9 @@ namespace Fantome.Libraries.LeagueFileManager
                 }
             }
 
+            /// <summary>
+            /// Returns the full path (with folders) of the current <see cref="ReleaseManifestFileEntry"/>.
+            /// </summary>
             public string GetFullPath()
             {
                 if (this.Folder.Parent != null)
@@ -99,6 +149,9 @@ namespace Fantome.Libraries.LeagueFileManager
                 }
             }
 
+            /// <summary>
+            /// Removes the current <see cref="ReleaseManifestFileEntry"/> from its folder.
+            /// </summary>
             public void Remove()
             {
                 if (this.Folder.Files.Contains(this))

@@ -10,12 +10,41 @@ namespace Fantome.Libraries.LeagueFileManager
     /// </summary>
     public partial class ReleaseManifest
     {
+        /// <summary>
+        /// File path of the parsed <see cref="ReleaseManifest"/>.
+        /// </summary>
         public string FilePath { get; private set; }
+
+        /// <summary>
+        /// Major version of the parsed <see cref="ReleaseManifest"/>.
+        /// </summary>
         public short MajorVersion { get; private set; }
+
+        /// <summary>
+        /// Minor version of the parsed <see cref="ReleaseManifest"/>.
+        /// </summary>
         public short MinorVersion { get; private set; }
+
+        /// <summary>
+        /// League of Legends release version the current <see cref="ReleaseManifest"/> contains info from.
+        /// </summary>
+        /// <example>0.0.1.25</example>
         public uint ReleaseVersion { get; private set; }
+
+        /// <summary>
+        /// League of Legends project name the current <see cref="ReleaseManifest"/> contains info from.
+        /// </summary>
+        /// <example>lol_game_client</example>
         public string ProjectName { get; private set; }
+
+        /// <summary>
+        /// List of names the current <see cref="ReleaseManifest"/> uses.
+        /// </summary>
         private List<string> Names = new List<string>();
+
+        /// <summary>
+        /// Base <see cref="ReleaseManifestFolderEntry"/> containing files and folders from the project release.
+        /// </summary>
         public ReleaseManifestFolderEntry Project { get; private set; }
 
         /// <summary>
@@ -67,12 +96,11 @@ namespace Fantome.Libraries.LeagueFileManager
             int nameCount = br.ReadInt32();
             int nameSectionLength = br.ReadInt32();
             this.Names.AddRange(Encoding.ASCII.GetString(br.ReadBytes(nameSectionLength)).Split('\0'));
-            this.Names.RemoveAt(this.Names.Count - 1);
             if (nameCount != this.Names.Count)
             {
-                throw new InvalidNamesListException();
+                this.Names.RemoveRange(nameCount, this.Names.Count - nameCount);
             }
-
+            
             this.ProjectName = this.Names[projectNameIndex];
 
             // Assigning names and parent/sub entries to all file and folder entries
@@ -333,8 +361,12 @@ namespace Fantome.Libraries.LeagueFileManager
         /// </summary>
         public enum DeployMode : uint
         {
-            Deployed = 0,
-            SolutionDeployed = 4,
+            /// <summary>
+            /// The file is in the 'deploy' folder.
+            /// </summary>
+            /// <example>C:/Riot Games/League of Legends/RADS/projects/league_client/releases/0.0.0.87/deploy/LeagueClient.exe</example>
+            Deployed0 = 0,
+            Deployed4 = 4,
             Managed = 5,
             RAFRaw = 6,
             RAFCompressed = 22
@@ -346,14 +378,6 @@ namespace Fantome.Libraries.LeagueFileManager
         public class InvalidMagicNumberException : Exception
         {
             public InvalidMagicNumberException(string readMagic) : base(String.Format("Invalid magic number (\"{0}\"), expected: \"RLSM\".", readMagic)) { }
-        }
-
-        /// <summary>
-        /// Occurs when the <see cref="Names"/> could not be read correctly.
-        /// </summary>
-        public class InvalidNamesListException : Exception
-        {
-            public InvalidNamesListException() : base("Names counts don't match.") { }
         }
     }
 }

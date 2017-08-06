@@ -65,7 +65,7 @@ namespace Fantome.Libraries.LeagueFileManager
                 // Installing file
                 string installPath = this.GetFileToInstallPath(gamePath, deployMode, LeagueInstallation.FantomeFilesVersion);
                 Directory.CreateDirectory(Path.GetDirectoryName(installPath));
-                if ((fileEntry != null) && deployMode == ReleaseManifest.DeployMode.Deployed)
+                if ((fileEntry != null) && deployMode == ReleaseManifest.DeployMode.Deployed4)
                 {
                     // Backup deployed file
                     BackupFile(fileEntry, installPath);
@@ -120,7 +120,7 @@ namespace Fantome.Libraries.LeagueFileManager
                 else
                 {
                     // Restore original file if necessary
-                    if (originalEntry.DeployMode == ReleaseManifest.DeployMode.Deployed)
+                    if (originalEntry.DeployMode == ReleaseManifest.DeployMode.Deployed4)
                     {
                         RestoreFile(originalEntry, installedPath);
                     }
@@ -141,7 +141,7 @@ namespace Fantome.Libraries.LeagueFileManager
                 {
                     return String.Format("{0}/managedfiles/{1}/{2}", this.Project.GetFolder(), LeagueInstallation.GetReleaseString(version), fileFullPath);
                 }
-                else if (deployMode == ReleaseManifest.DeployMode.Deployed)
+                else if (deployMode == ReleaseManifest.DeployMode.Deployed4)
                 {
                     return String.Format("{0}/releases/{1}/deploy/{2}", this.Project.GetFolder(), this.Version, fileFullPath);
                 }
