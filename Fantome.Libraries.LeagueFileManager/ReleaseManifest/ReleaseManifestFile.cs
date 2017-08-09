@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Fantome.Libraries.LeagueFileManager
+namespace Fantome.Libraries.LeagueFileManager.ReleaseManifest
 {
     /// <summary>
     /// League of Legends Release Manifest File containing data (files, folders) from a specific release.
     /// </summary>
-    public partial class ReleaseManifest
+    public class ReleaseManifestFile
     {
         /// <summary>
         /// File path of the parsed <see cref="ReleaseManifest"/>.
@@ -51,7 +51,7 @@ namespace Fantome.Libraries.LeagueFileManager
         /// Parses a League of Legends Release Manifest File at <paramref name="filePath"/>.
         /// </summary>
         /// <param name="filePath">Path to the Release Manifest</param>
-        public ReleaseManifest(string filePath)
+        public ReleaseManifestFile(string filePath)
         {
             this.FilePath = filePath;
             using (BinaryReader br = new BinaryReader(File.OpenRead(filePath), Encoding.ASCII))

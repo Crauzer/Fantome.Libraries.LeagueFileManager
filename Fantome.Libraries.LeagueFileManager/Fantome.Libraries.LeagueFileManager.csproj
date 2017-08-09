@@ -42,13 +42,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Manager\LeagueDeployRules.cs" />
-    <Compile Include="Manager\LeagueInstallation.cs" />
-    <Compile Include="Manager\LeagueProject.cs" />
-    <Compile Include="Manager\LeagueProjectRelease.cs" />
-    <Compile Include="Manager\LeagueManager.cs" />
+    <Compile Include="LeagueDeployRules.cs" />
+    <Compile Include="LeagueInstallation.cs" />
+    <Compile Include="LeagueProject.cs" />
+    <Compile Include="LeagueProjectRelease.cs" />
+    <Compile Include="LeagueManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ReleaseManifest\ReleaseManifest.cs" />
+    <Compile Include="ReleaseManifest\ReleaseManifestFile.cs" />
     <Compile Include="ReleaseManifest\ReleaseManifestFileEntry.cs" />
     <Compile Include="ReleaseManifest\ReleaseManifestFolderEntry.cs" />
     <Compile Include="RAF\RAFFileEntry.cs" />

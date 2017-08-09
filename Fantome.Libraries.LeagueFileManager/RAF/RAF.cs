@@ -4,15 +4,16 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 
-namespace Fantome.Libraries.LeagueFileManager
+namespace Fantome.Libraries.LeagueFileManager.RiotArchive
 {
-    public partial class RAF : IDisposable
+    public class RAF : IDisposable
     {
+        private const uint Magic = 0x18be0ef0;
         public string FilePath { get; private set; }
         public int Version { get; private set; }
         public int ManagerIndex { get; private set; }
         public List<RAFFileEntry> Files { get; private set; } = new List<RAFFileEntry>();
-        private FileStream _dataStream;
+        public FileStream _dataStream { get; private set; }
 
         public RAF(string filePath)
         {
@@ -37,7 +38,7 @@ namespace Fantome.Libraries.LeagueFileManager
             }
         }
 
-        private void InitDataStream()
+        public void InitDataStream()
         {
             if (this._dataStream != null)
             {
@@ -51,7 +52,7 @@ namespace Fantome.Libraries.LeagueFileManager
         private void Read(BinaryReader br)
         {
             uint magic = br.ReadUInt32();
-            if (magic != 0x18be0ef0)
+            if (magic != Magic)
             {
                 throw new InvalidMagicNumberException(magic);
             }
@@ -72,7 +73,7 @@ namespace Fantome.Libraries.LeagueFileManager
             PathList pathList = new PathList(br);
             foreach (RAFFileEntry fileEntry in this.Files)
             {
-                fileEntry.AssignPath(pathList.Paths);
+                fileEntry.Path = pathList.Paths[fileEntry.PathListIndex];
             }
         }
 
@@ -93,7 +94,7 @@ namespace Fantome.Libraries.LeagueFileManager
                 this.Files[i].PathListIndex = i;
             }
 
-            bw.Write(0x18be0ef0);
+            bw.Write(Magic);
             bw.Write(this.Version);
             bw.Write(this.ManagerIndex);
             // File list offset
@@ -145,7 +146,7 @@ namespace Fantome.Libraries.LeagueFileManager
             return (int)(hash & 0xFF000000) >> 24 | (hash & 0x00FF0000) >> 8 | (hash & 0x0000FF00) << 8 | (hash & 0x000000FF) << 24;
         }
 
-        private static byte[] GetCompressedData(byte[] rawData)
+        public static byte[] GetCompressedData(byte[] rawData)
         {
             byte[] compressedData = null;
             using (MemoryStream originalStream = new MemoryStream(rawData))
@@ -162,7 +163,7 @@ namespace Fantome.Libraries.LeagueFileManager
             return compressedData;
         }
 
-        private static byte[] GetDecompressedData(byte[] compressedData)
+        public static byte[] GetDecompressedData(byte[] compressedData)
         {
             byte[] decompressedData = null;
             using (MemoryStream compressedStream = new MemoryStream(compressedData))
@@ -191,6 +192,16 @@ namespace Fantome.Libraries.LeagueFileManager
                 this._dataStream.Dispose();
                 this._dataStream = null;
             }
+        }
+
+        public class InvalidMagicNumberException : Exception
+        {
+            public InvalidMagicNumberException(uint readMagic) : base(String.Format("Invalid magic number (\"{0}\"), expected: \"{1}\".", readMagic, 0xF00EBE18)) { }
+        }
+
+        public class MissingDataFileException : Exception
+        {
+            public MissingDataFileException() : base("The data file wasn't found for the specified archive.") { }
         }
 
         private class PathList
@@ -242,16 +253,6 @@ namespace Fantome.Libraries.LeagueFileManager
                     bw.Write((byte)0);
                 }
             }
-        }
-
-        public class InvalidMagicNumberException : Exception
-        {
-            public InvalidMagicNumberException(uint readMagic) : base(String.Format("Invalid magic number (\"{0}\"), expected: \"{1}\".", readMagic, 0xF00EBE18)) { }
-        }
-
-        public class MissingDataFileException : Exception
-        {
-            public MissingDataFileException() : base("The data file wasn't found for the specified archive.") { }
         }
     }
 }

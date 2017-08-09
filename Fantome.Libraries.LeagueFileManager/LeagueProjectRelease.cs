@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using Fantome.Libraries.LeagueFileManager.ReleaseManifest;
 
 namespace Fantome.Libraries.LeagueFileManager
 {
@@ -10,8 +11,8 @@ namespace Fantome.Libraries.LeagueFileManager
             public LeagueProject Project { get; private set; }
             public string Version { get; private set; }
             public uint VersionValue { get; private set; }
-            public ReleaseManifest GameManifest { get; private set; }
-            public ReleaseManifest OriginalManifest { get; private set; }
+            public ReleaseManifestFile GameManifest { get; private set; }
+            public ReleaseManifestFile OriginalManifest { get; private set; }
             public bool HasChanged { get; private set; }
 
             public LeagueProjectRelease(LeagueProject project, string version)
@@ -22,7 +23,7 @@ namespace Fantome.Libraries.LeagueFileManager
                 string manifestPath = this.GetFolder() + "/releasemanifest";
                 if (File.Exists(manifestPath))
                 {
-                    this.GameManifest = new ReleaseManifest(manifestPath);
+                    this.GameManifest = new ReleaseManifestFile(manifestPath);
                 }
                 else
                 {
@@ -42,7 +43,7 @@ namespace Fantome.Libraries.LeagueFileManager
                 {
                     File.Copy(this.GameManifest.FilePath, manifestPath);
                 }
-                this.OriginalManifest = new ReleaseManifest(manifestPath);
+                this.OriginalManifest = new ReleaseManifestFile(manifestPath);
             }
 
             public string GetFolder()
@@ -59,13 +60,13 @@ namespace Fantome.Libraries.LeagueFileManager
                 }
 
                 // Getting the matching file entry (null if new file) and finding the deploy mode to use
-                ReleaseManifest.ReleaseManifestFileEntry fileEntry = this.GameManifest.GetFile(gamePath, false);
-                ReleaseManifest.DeployMode deployMode = deployRules.GetTargetDeployMode(this.Project.Name, fileEntry);
+                ReleaseManifestFileEntry fileEntry = this.GameManifest.GetFile(gamePath, false);
+                ReleaseManifestFile.DeployMode deployMode = deployRules.GetTargetDeployMode(this.Project.Name, fileEntry);
 
                 // Installing file
                 string installPath = this.GetFileToInstallPath(gamePath, deployMode, LeagueInstallation.FantomeFilesVersion);
                 Directory.CreateDirectory(Path.GetDirectoryName(installPath));
-                if ((fileEntry != null) && deployMode == ReleaseManifest.DeployMode.Deployed4)
+                if ((fileEntry != null) && deployMode == ReleaseManifestFile.DeployMode.Deployed4)
                 {
                     // Backup deployed file
                     BackupFile(fileEntry, installPath);
@@ -120,7 +121,7 @@ namespace Fantome.Libraries.LeagueFileManager
                 else
                 {
                     // Restore original file if necessary
-                    if (originalEntry.DeployMode == ReleaseManifest.DeployMode.Deployed4)
+                    if (originalEntry.DeployMode == ReleaseManifestFile.DeployMode.Deployed4)
                     {
                         RestoreFile(originalEntry, installedPath);
                     }
@@ -135,13 +136,13 @@ namespace Fantome.Libraries.LeagueFileManager
                 this.HasChanged = true;
             }
 
-            private string GetFileToInstallPath(string fileFullPath, ReleaseManifest.DeployMode deployMode, uint version)
+            private string GetFileToInstallPath(string fileFullPath, ReleaseManifestFile.DeployMode deployMode, uint version)
             {
-                if (deployMode == ReleaseManifest.DeployMode.Managed)
+                if (deployMode == ReleaseManifestFile.DeployMode.Managed)
                 {
                     return String.Format("{0}/managedfiles/{1}/{2}", this.Project.GetFolder(), LeagueInstallation.GetReleaseString(version), fileFullPath);
                 }
-                else if (deployMode == ReleaseManifest.DeployMode.Deployed4)
+                else if (deployMode == ReleaseManifestFile.DeployMode.Deployed4)
                 {
                     return String.Format("{0}/releases/{1}/deploy/{2}", this.Project.GetFolder(), this.Version, fileFullPath);
                 }
