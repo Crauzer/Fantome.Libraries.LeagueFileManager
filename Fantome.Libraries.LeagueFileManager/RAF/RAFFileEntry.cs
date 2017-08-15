@@ -4,9 +4,21 @@ using System.IO;
 
 namespace Fantome.Libraries.LeagueFileManager.RiotArchive
 {
+    /// <summary>
+    /// Contains information about files stored in Riot Archive Files
+    /// </summary>
     public class RAFFileEntry : IComparable<RAFFileEntry>
     {
         private string _path;
+
+        /// <summary>
+        /// Hash of <see cref="Path"/>.
+        /// </summary>
+        private uint _pathHash;
+
+        /// <summary>
+        /// Game path of the current <see cref="RAFFileEntry"/>.
+        /// </summary>
         public string Path
         {
             get
@@ -16,24 +28,52 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
             set
             {
                 _path = value;
-                PathHash = GetPathHash();
+                _pathHash = GetPathHash();
             }
         }
+
+        /// <summary>
+        /// Start offset of the current <see cref="RAFFileEntry"/> in the data file of the current <see cref="RAF"/>.
+        /// </summary>
         public uint Offset { get; private set; }
+
+        /// <summary>
+        /// Data length of the current <see cref="RAFFileEntry"/>.
+        /// </summary>
         public uint Length { get; private set; }
-        public uint PathHash { get; private set; }
+
+        /// <summary>
+        /// Position of <see cref="Path"/> in the <see cref="RAF.PathList"/>.
+        /// </summary>
+        /// <remarks>Used only when reading & writing the RAF.</remarks>
         public int PathListIndex { get; set; }
+
+        /// <summary>
+        /// Instance of <see cref="RAF"/> the current file belongs to.
+        /// </summary>
         private RAF _raf;
 
+        /// <summary>
+        /// Parses the content of a <see cref="RAFFileEntry"/> from a previously initialized <see cref="BinaryReader"/>.
+        /// </summary>
+        /// <param name="raf"><see cref="RAF"/> instance the current <see cref="RAFFileEntry"/> belongs to.</param>
+        /// <param name="br"><see cref="BinaryReader"/> instance containing data from a this <see cref="RAFFileEntry"/>.</param>
         public RAFFileEntry(RAF raf, BinaryReader br)
         {
             this._raf = raf;
-            this.PathHash = br.ReadUInt32();
+            this._pathHash = br.ReadUInt32();
             this.Offset = br.ReadUInt32();
             this.Length = br.ReadUInt32();
             this.PathListIndex = br.ReadInt32();
         }
 
+        /// <summary>
+        /// Creates a new <see cref="RAFFileEntry"/>.
+        /// </summary>
+        /// <param name="raf"><see cref="RAF"/> instance the current <see cref="RAFFileEntry"/> belongs to.</param>
+        /// <param name="path">Game path of the new file.</param>
+        /// <param name="offset">Start offset of the new file in the data file of <paramref name="raf"/>.</param>
+        /// <param name="length">Data length of the new file.</param>
         public RAFFileEntry(RAF raf, string path, uint offset, uint length)
         {
             this._raf = raf;
@@ -42,6 +82,10 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
             this.Length = length;
         }
 
+        /// <summary>
+        /// Returns raw data of the current <see cref="RAFFileEntry"/>.
+        /// </summary>
+        /// <param name="decompress">Whether the data needs to be decompressed.</param>
         public byte[] GetContent(bool decompress)
         {
             this._raf.InitDataStream();
@@ -62,6 +106,9 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
             }
         }
 
+        /// <summary>
+        /// Calculates the hash of <see cref="Path"/>.
+        /// </summary>
         private uint GetPathHash()
         {
             uint hash = 0;
@@ -80,21 +127,29 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
             return hash;
         }
 
+        /// <summary>
+        /// Writes content from the current <see cref="RAFFileEntry"/> to a previously initialized <see cref="BinaryWriter"/>.
+        /// </summary>
+        /// <param name="bw">Instance of <see cref="BinaryWriter"/> where to write data.</param>
         public void Write(BinaryWriter bw)
         {
-            bw.Write(this.PathHash);
+            bw.Write(this._pathHash);
             bw.Write(this.Offset);
             bw.Write(this.Length);
             bw.Write(this.PathListIndex);
         }
 
+        /// <summary>
+        /// Compares two <see cref="RAFFileEntry"/> instances.
+        /// </summary>
+        /// <remarks>Used to generate a valid list of files in a <see cref="RAF"/>.</remarks>
         public int CompareTo(RAFFileEntry other)
         {
-            if (this.PathHash > other.PathHash)
+            if (this._pathHash > other._pathHash)
             {
                 return 1;
             }
-            else if (this.PathHash < other.PathHash)
+            else if (this._pathHash < other._pathHash)
             {
                 return -1;
             }

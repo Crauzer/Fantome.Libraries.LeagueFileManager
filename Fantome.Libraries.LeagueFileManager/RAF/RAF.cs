@@ -6,15 +6,47 @@ using System.Text;
 
 namespace Fantome.Libraries.LeagueFileManager.RiotArchive
 {
+    /// <summary>
+    /// Riot Archive File (RAF) containing files from LoL.
+    /// </summary>
     public class RAF : IDisposable
     {
+        /// <summary>
+        /// Number every RAF starts with.
+        /// </summary>
         private const uint Magic = 0x18be0ef0;
+
+        /// <summary>
+        /// File path of the current <see cref="RAF"/>.
+        /// </summary>
         public string FilePath { get; private set; }
+
+        /// <summary>
+        /// File version of the current <see cref="RAF"/>.
+        /// </summary>
+        /// <remarks>There have been only version 1 archives so far.</remarks>
         public int Version { get; private set; }
+
+        /// <summary>
+        /// ManagerIndex value of the current <see cref="RAF"/> (no real meaning found, since many new RAFs have a "0" <see cref="ManagerIndex"/>).
+        /// </summary>
         public int ManagerIndex { get; private set; }
+
+        /// <summary>
+        /// List of files included in the current <see cref="RAF"/>.
+        /// </summary>
         public List<RAFFileEntry> Files { get; private set; } = new List<RAFFileEntry>();
+
+        /// <summary>
+        /// <see cref="FileStream"/> of the opened data file of the current <see cref="RAF"/>.
+        /// </summary>
         public FileStream _dataStream { get; private set; }
 
+        /// <summary>
+        /// Opens or create a <see cref="RAF"/> at the specified path.
+        /// </summary>
+        /// <param name="filePath">The file path to open or create a <see cref="RAF"/> at.</param>
+        /// <remarks>If an existing RAF is opened, its data file is opened as well.</remarks>
         public RAF(string filePath)
         {
             this.FilePath = filePath;
@@ -38,6 +70,10 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
             }
         }
 
+        /// <summary>
+        /// Loads the <see cref="FileStream"/> of the data file of the current <see cref="RAF"/>.
+        /// </summary>
+        /// <remarks>Creates the data file if it doesn't exist.</remarks>
         public void InitDataStream()
         {
             if (this._dataStream != null)
@@ -49,6 +85,10 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
             this._dataStream = File.Open(this.FilePath + ".dat", FileMode.OpenOrCreate);
         }
 
+        /// <summary>
+        /// Parses the content of a RAF from a previously initialized <see cref="BinaryReader"/>.
+        /// </summary>
+        /// <param name="br"><see cref="BinaryReader"/> instance containing data from a RAF.</param>
         private void Read(BinaryReader br)
         {
             uint magic = br.ReadUInt32();
@@ -77,6 +117,9 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
             }
         }
 
+        /// <summary>
+        /// Saves the content of the current <see cref="RAF"/> at <see cref="FilePath"/>.
+        /// </summary>
         public void Save()
         {
             using (BinaryWriter bw = new BinaryWriter(new FileStream(this.FilePath, FileMode.Create)))
@@ -85,6 +128,10 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
             }
         }
 
+        /// <summary>
+        /// Writes the content of the current <see cref="RAF"/> in a previously initialized <see cref="BinaryReader"/>.
+        /// </summary>
+        /// <param name="bw"></param>
         private void Write(BinaryWriter bw)
         {
             // Preparing file entries before writing
@@ -111,6 +158,12 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
             pathList.Write(bw);
         }
 
+        /// <summary>
+        /// Adds a new file to the current <see cref="RAF"/>.
+        /// </summary>
+        /// <param name="gamePath">Game path of the file to add.</param>
+        /// <param name="data">Raw data of the file to add.</param>
+        /// <param name="compress">Whether the file data needs to be ZLIB compressed.</param>
         public void AddFile(string gamePath, byte[] data, bool compress)
         {
             this.InitDataStream();
@@ -132,6 +185,21 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
             this.Files.Add(new RAFFileEntry(this, gamePath, fileOffset, (uint)fileLength));
         }
 
+        /// <summary>
+        /// Adds a new file to the current <see cref="RAF"/>.
+        /// </summary>
+        /// <param name="gamePath">Game path of the file to add.</param>
+        /// <param name="inputFilePath">Path (on your computer) of the file to add.</param>
+        /// <param name="compressed">Whether the file data needs to be ZLIB compressed.</param>
+        public void AddFile(string gamePath, string inputFilePath, bool compressed)
+        {
+            this.AddFile(gamePath, File.ReadAllBytes(inputFilePath), compressed);
+        }
+
+        /// <summary>
+        /// Checksum used for ZLIB compression.
+        /// </summary>
+        /// <param name="data">Raw data to calculate the checksum from.</param>
         private static int GetAdler32Hash(byte[] data)
         {
             long MOD_ADLER = 65521;
@@ -146,6 +214,11 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
             return (int)(hash & 0xFF000000) >> 24 | (hash & 0x00FF0000) >> 8 | (hash & 0x0000FF00) << 8 | (hash & 0x000000FF) << 24;
         }
 
+        /// <summary>
+        /// Deflate Compresses the passed data.
+        /// </summary>
+        /// <param name="rawData">Data to Deflate compress.</param>
+        /// <returns>The Deflate compressed data.</returns>
         public static byte[] GetCompressedData(byte[] rawData)
         {
             byte[] compressedData = null;
@@ -163,6 +236,11 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
             return compressedData;
         }
 
+        /// <summary>
+        /// Decompresses a Deflate Compressed data.
+        /// </summary>
+        /// <param name="compressedData">Deflate Compressed data to decompress.</param>
+        /// <returns>The decompressed data.</returns>
         public static byte[] GetDecompressedData(byte[] compressedData)
         {
             byte[] decompressedData = null;
@@ -180,11 +258,9 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
             return decompressedData;
         }
 
-        public void AddFile(string gamePath, string inputFilePath, bool compressed)
-        {
-            this.AddFile(gamePath, File.ReadAllBytes(inputFilePath), compressed);
-        }
-
+        /// <summary>
+        /// Closes the opened data file stream of the current <see cref="RAF"/>.
+        /// </summary>
         public void Dispose()
         {
             if (this._dataStream != null)
@@ -194,16 +270,26 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
             }
         }
 
+        /// <summary>
+        /// Occurs when the read magic number is not <see cref="Magic"/>.
+        /// </summary>
         public class InvalidMagicNumberException : Exception
         {
             public InvalidMagicNumberException(uint readMagic) : base(String.Format("Invalid magic number (\"{0}\"), expected: \"{1}\".", readMagic, 0xF00EBE18)) { }
         }
 
+        /// <summary>
+        /// Occurs when the data file was not found when opening an existing RAF.
+        /// </summary>
         public class MissingDataFileException : Exception
         {
             public MissingDataFileException() : base("The data file wasn't found for the specified archive.") { }
         }
 
+        /// <summary>
+        /// Path list containing all paths to the files in the current <see cref="RAF"/>.
+        /// </summary>
+        /// <remarks>Is only used when reading and writing.</remarks>
         private class PathList
         {
             private uint _size;
