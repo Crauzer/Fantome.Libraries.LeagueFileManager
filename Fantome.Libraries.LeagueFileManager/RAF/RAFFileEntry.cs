@@ -46,7 +46,7 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
         /// Position of <see cref="Path"/> in the <see cref="RAF.PathList"/>.
         /// </summary>
         /// <remarks>Used only when reading & writing the RAF.</remarks>
-        public int PathListIndex { get; set; }
+        internal int PathListIndex { get; set; }
 
         /// <summary>
         /// Instance of <see cref="RAF"/> the current file belongs to.

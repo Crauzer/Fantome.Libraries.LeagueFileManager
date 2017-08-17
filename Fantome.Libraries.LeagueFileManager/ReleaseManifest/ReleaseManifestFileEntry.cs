@@ -13,12 +13,12 @@ namespace Fantome.Libraries.LeagueFileManager.ReleaseManifest
         /// Name of the current <see cref="ReleaseManifestFileEntry"/>.
         /// </summary>
         /// <example>room.wgeo</example>
-        public string Name { get; set; }
+        public string Name { get; internal set; }
 
         /// <summary>
         /// Position of the <see cref="Name"/> in <see cref="Names"/>.
         /// </summary>
-        public int NameIndex { get; private set; }
+        internal int NameIndex { get; private set; }
 
         /// <summary>
         /// File version in number.
@@ -75,7 +75,7 @@ namespace Fantome.Libraries.LeagueFileManager.ReleaseManifest
         /// <summary>
         /// The <see cref="ReleaseManifestFolderEntry"/> the current <see cref="ReleaseManifestFileEntry"/> belongs to.
         /// </summary>
-        public ReleaseManifestFolderEntry Folder { get; set; }
+        public ReleaseManifestFolderEntry Folder { get; internal set; }
 
         /// <summary>
         /// Parses Release Manifest File Entry content from a previously initialized <see cref="BinaryReader"/>.

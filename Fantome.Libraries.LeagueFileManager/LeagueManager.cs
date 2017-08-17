@@ -1,71 +1,56 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static Fantome.Libraries.LeagueFileManager.LeagueDeployRules;
+using System.IO;
 
 namespace Fantome.Libraries.LeagueFileManager
 {
     public partial class LeagueManager : IDisposable
     {
-        private LeagueInstallation Installation;
-        public LeagueDeployRules DeployRules { get; private set; }
+        private readonly LeagueInstallation _installation;
+        private readonly string _managerFolderPath;
 
-        public LeagueManager(string gamePath)
+        public LeagueManager(string managerFolderPath, string gamePath)
         {
-            this.Installation = new LeagueInstallation(gamePath);
-            this.Installation.LoadOriginalManifests();
-            this.DeployRules = new LeagueDeployRules(LeagueFileDeployMode.Managed);
-        }
-
-        public void InstallFile(string projectName, string gamePath, string filePath)
-        {
-            this.GetProjectLatestRelease(projectName).InstallFile(gamePath, filePath, DeployRules);
-        }
-
-        public void RevertFile(string projectName, string gamePath)
-        {
-            this.GetProjectLatestRelease(projectName).RevertFile(gamePath);
-        }
-
-        private LeagueProjectRelease GetProjectLatestRelease(string projectName)
-        {
-            LeagueProject foundProject = Installation.GetProject(projectName);
-            if (foundProject == null)
+            _managerFolderPath = managerFolderPath;
+            if (Directory.Exists(gamePath + "/RADS"))
             {
-                throw new ProjectNotFoundException();
+                _installation = new LeagueRADSInstallation(this, gamePath);
             }
-            LeagueProjectRelease foundProjectRelease = foundProject.GetLatestRelease();
-            if (foundProjectRelease == null)
+            else
             {
-                throw new ProjectReleaseNotFoundException();
+                _installation = new LeagueRawInstallation(this, gamePath);
             }
-            return foundProjectRelease;
+        }
+
+        public void InstallFile(ModifiedFile modifiedFile)
+        {
+            _installation.InstallFile(modifiedFile);
+        }
+
+        public void RevertFile(ModifiedFile modifiedFile)
+        {
+            _installation.RevertFile(modifiedFile);
+        }
+
+        public void AddDeployModeRule(string projectName, LeagueRADSFileDeployMode originalDeployMode, LeagueRADSFileDeployMode targetDeployMode)
+        {
+            (_installation as LeagueRADSInstallation)?.DeployRules.AddDeployModeRule(projectName, originalDeployMode, targetDeployMode);
         }
 
         public void Dispose()
         {
-            foreach (LeagueProject project in this.Installation.Projects)
+            if (_installation is LeagueRADSInstallation)
             {
-                foreach (LeagueProjectRelease release in project.Releases)
+                foreach (LeagueRADSProject project in (_installation as LeagueRADSInstallation).Projects)
                 {
-                    if (release.HasChanged)
+                    foreach (LeagueRADSProjectRelease release in project.Releases)
                     {
-                        release.GameManifest.Save();
+                        if (release.HasChanged)
+                        {
+                            release.GameManifest.Save();
+                        }
                     }
                 }
             }
-        }
-
-        public class ProjectNotFoundException : Exception
-        {
-            public ProjectNotFoundException() : base("The specified project was not found in the current League Installation") { }
-        }
-
-        public class ProjectReleaseNotFoundException : Exception
-        {
-            public ProjectReleaseNotFoundException() : base("The release was not found for the specified project") { }
         }
     }
 }

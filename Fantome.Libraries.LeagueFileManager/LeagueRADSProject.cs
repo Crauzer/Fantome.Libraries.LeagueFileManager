@@ -5,13 +5,13 @@ namespace Fantome.Libraries.LeagueFileManager
 {
     public partial class LeagueManager
     {
-        protected class LeagueProject
+        protected class LeagueRADSProject
         {
-            public LeagueInstallation Installation { get; private set; }
-            public string Name { get; private set; }
-            public List<LeagueProjectRelease> Releases { get; private set; } = new List<LeagueProjectRelease>();
+            public readonly LeagueRADSInstallation Installation;
+            public readonly string Name;
+            public readonly List<LeagueRADSProjectRelease> Releases = new List<LeagueRADSProjectRelease>();
 
-            public LeagueProject(LeagueInstallation installation, string projectName, List<string> releases)
+            public LeagueRADSProject(LeagueRADSInstallation installation, string projectName, List<string> releases)
             {
                 this.Installation = installation;
                 this.Name = projectName;
@@ -19,9 +19,9 @@ namespace Fantome.Libraries.LeagueFileManager
                 {
                     try
                     {
-                        this.Releases.Add(new LeagueProjectRelease(this, release));
+                        this.Releases.Add(new LeagueRADSProjectRelease(this, release));
                     }
-                    catch (LeagueProjectRelease.ReleaseManifestNotFoundException)
+                    catch (LeagueRADSProjectRelease.ReleaseManifestNotFoundException)
                     {
                     }
                 }
@@ -33,7 +33,7 @@ namespace Fantome.Libraries.LeagueFileManager
 
             public void LoadOriginalManifests()
             {
-                foreach (LeagueProjectRelease release in this.Releases)
+                foreach (LeagueRADSProjectRelease release in this.Releases)
                 {
                     release.LoadOriginalManifest();
                 }
@@ -44,17 +44,17 @@ namespace Fantome.Libraries.LeagueFileManager
                 return String.Format("{0}/RADS/projects/{1}", this.Installation.Folder, this.Name);
             }
 
-            public LeagueProjectRelease GetRelease(string version)
+            public LeagueRADSProjectRelease GetRelease(string version)
             {
                 return this.Releases.Find(x => x.Version == version);
             }
 
-            public LeagueProjectRelease GetLatestRelease()
+            public LeagueRADSProjectRelease GetLatestRelease()
             {
-                LeagueProjectRelease latestRelease = null;
-                foreach (LeagueProjectRelease release in this.Releases)
+                LeagueRADSProjectRelease latestRelease = null;
+                foreach (LeagueRADSProjectRelease release in this.Releases)
                 {
-                    uint releaseValue = LeagueInstallation.GetReleaseValue(release.Version);
+                    uint releaseValue = LeagueRADSInstallation.GetReleaseValue(release.Version);
                     if (latestRelease == null || releaseValue > latestRelease.VersionValue)
                     {
                         latestRelease = release;

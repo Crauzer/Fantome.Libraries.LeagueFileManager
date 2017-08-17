@@ -11,47 +11,47 @@ namespace Fantome.Libraries.LeagueFileManager.ReleaseManifest
         /// <summary>
         /// Name of the current <see cref="ReleaseManifestFolderEntry"/>.
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; internal set; }
 
         /// <summary>
         /// Position of the <see cref="Name"/> in <see cref="Names"/>.
         /// </summary>
-        public int NameIndex { get; private set; }
+        internal int NameIndex { get; private set; }
 
         /// <summary>
         /// Position of the first subfolder of the current <see cref="ReleaseManifestFolderEntry"/> in the folders buffer (used for reading & writing the manifest).
         /// </summary>
-        public int SubFolderStartIndex { get; set; }
+        internal int SubFolderStartIndex { get; set; }
 
         /// <summary>
         /// Number of subfolders of the current <see cref="ReleaseManifestFolderEntry"/> (used for reading & writing the manifest).
         /// </summary>
-        public int SubFolderCount { get; private set; }
+        internal int SubFolderCount { get; private set; }
 
         /// <summary>
         /// Position of the first file in the current <see cref="ReleaseManifestFolderEntry"/> in the files buffer (used for reading & writing the manifest).
         /// </summary>
-        public int FileListStartIndex { get; set; }
+        internal int FileListStartIndex { get; set; }
 
         /// <summary>
         /// Number of files in the current <see cref="ReleaseManifestFolderEntry"/> (used for reading & writing the manifest).
         /// </summary>
-        public int FileCount { get; private set; }
+        internal int FileCount { get; private set; }
 
         /// <summary>
         /// Parent folder of the current <see cref="ReleaseManifestFolderEntry"/>.
         /// </summary>
-        public ReleaseManifestFolderEntry Parent { get; set; }
+        public ReleaseManifestFolderEntry Parent { get; internal set; }
 
         /// <summary>
         /// List of subfolders of the current <see cref="ReleaseManifestFolderEntry"/>.
         /// </summary>
-        public List<ReleaseManifestFolderEntry> Folders { get; private set; } = new List<ReleaseManifestFolderEntry>();
+        public readonly List<ReleaseManifestFolderEntry> Folders = new List<ReleaseManifestFolderEntry>();
 
         /// <summary>
         /// List of files of the current <see cref="ReleaseManifestFolderEntry"/>.
         /// </summary>
-        public List<ReleaseManifestFileEntry> Files { get; private set; } = new List<ReleaseManifestFileEntry>();
+        public readonly List<ReleaseManifestFileEntry> Files = new List<ReleaseManifestFileEntry>();
 
         /// <summary>
         /// Parses Release Manifest Folder Entry content from a previously initialized <see cref="BinaryReader"/>.

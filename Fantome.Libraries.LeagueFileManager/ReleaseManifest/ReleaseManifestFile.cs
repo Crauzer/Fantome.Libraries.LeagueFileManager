@@ -40,7 +40,7 @@ namespace Fantome.Libraries.LeagueFileManager.ReleaseManifest
         /// <summary>
         /// List of names the current <see cref="ReleaseManifest"/> uses.
         /// </summary>
-        private List<string> Names = new List<string>();
+        private readonly List<string> Names = new List<string>();
 
         /// <summary>
         /// Base <see cref="ReleaseManifestFolderEntry"/> containing files and folders from the project release.
