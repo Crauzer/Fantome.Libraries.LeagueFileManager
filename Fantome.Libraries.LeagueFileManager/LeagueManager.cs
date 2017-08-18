@@ -3,14 +3,14 @@ using System.IO;
 
 namespace Fantome.Libraries.LeagueFileManager
 {
-    public partial class LeagueManager : IDisposable
+    public class LeagueManager : IDisposable
     {
         private readonly LeagueInstallation _installation;
-        private readonly string _managerFolderPath;
+        internal readonly string ManagerFolderPath;
 
         public LeagueManager(string managerFolderPath, string gamePath)
         {
-            _managerFolderPath = managerFolderPath;
+            ManagerFolderPath = managerFolderPath;
             if (Directory.Exists(gamePath + "/RADS"))
             {
                 _installation = new LeagueRADSInstallation(this, gamePath);
