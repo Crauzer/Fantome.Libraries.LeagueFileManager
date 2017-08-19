@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Fantome.Libraries.LeagueFileManager.ReleaseManifest;
+using System.Linq;
 
 namespace Fantome.Libraries.LeagueFileManager
 {
@@ -31,8 +32,8 @@ namespace Fantome.Libraries.LeagueFileManager
 
         public void LoadOriginalManifest()
         {
-            string originalManifestFolder = String.Format("{0}/lol-manager/manifests/{1}/{2}",
-                this.Project.Installation.CurrentManager.ManagerFolderPath,
+            string originalManifestFolder = String.Format("{0}/{1}/manifests/{2}",
+                this.Project.Installation.ManagerInstallationFolder,
                 this.Project.Name,
                 this.Version);
             string manifestPath = originalManifestFolder + "/releasemanifest";
@@ -51,14 +52,24 @@ namespace Fantome.Libraries.LeagueFileManager
 
         public void InstallFile(ModifiedFile modifiedFile, LeagueRADSDeployRules deployRules)
         {
+            if (modifiedFile.FilePath == null)
+                throw new NotSpecifiedFileToInstallException();
+
+            if (modifiedFile.MD5 == null)
+                throw new NotSpecifiedMD5Exception();
+
             FileInfo fileToInstall = new FileInfo(modifiedFile.FilePath);
             if (!fileToInstall.Exists)
-            {
                 throw new FileToInstallNotFoundException();
-            }
 
-            // Getting the matching file entry (null if new file) and finding the deploy mode to use
+            // Getting the matching file entry (null if new file)
             ReleaseManifestFileEntry fileEntry = this.GameManifest.GetFile(modifiedFile.GamePath, false);
+
+            // File is already installed, don't install it again
+            if (fileEntry != null && fileEntry.MD5.SequenceEqual(modifiedFile.MD5))
+                return;
+
+            // Finding the deploy mode to use
             ReleaseManifestFile.DeployMode deployMode = deployRules.GetTargetDeployMode(this.Project.Name, fileEntry);
 
             // Installing file
@@ -76,6 +87,7 @@ namespace Fantome.Libraries.LeagueFileManager
             {
                 fileEntry = this.GameManifest.GetFile(modifiedFile.GamePath, true);
             }
+            fileEntry.MD5 = modifiedFile.MD5;
             fileEntry.DeployMode = deployMode;
             fileEntry.SizeRaw = (int)fileToInstall.Length;
             fileEntry.SizeCompressed = fileEntry.SizeRaw;
@@ -83,19 +95,19 @@ namespace Fantome.Libraries.LeagueFileManager
             this.HasChanged = true;
         }
 
-        private void BackupFile(ReleaseManifest.ReleaseManifestFileEntry fileEntry, string filePath)
+        private void BackupFile(ReleaseManifestFileEntry fileEntry, string filePath)
         {
             File.Copy(filePath, this.GetBackupPath(fileEntry), false);
         }
 
-        private void RestoreFile(ReleaseManifest.ReleaseManifestFileEntry fileEntry, string filePath)
+        private void RestoreFile(ReleaseManifestFileEntry fileEntry, string filePath)
         {
             File.Copy(this.GetBackupPath(fileEntry), filePath, true);
         }
 
-        private string GetBackupPath(ReleaseManifest.ReleaseManifestFileEntry fileEntry)
+        private string GetBackupPath(ReleaseManifestFileEntry fileEntry)
         {
-            return String.Format("{0}lol-manager/backup/{1}/{2}/{3}", this.Project.Installation.CurrentManager.ManagerFolderPath, this.Project.Name, LeagueRADSInstallation.GetReleaseString(fileEntry.Version), fileEntry.GetFullPath());
+            return String.Format("{0}/{1}/backup/{2}/{3}", this.Project.Installation.ManagerInstallationFolder, this.Project.Name, LeagueRADSInstallation.GetReleaseString(fileEntry.Version), fileEntry.GetFullPath());
         }
 
         public void RevertFile(ModifiedFile modifiedFile)
@@ -104,13 +116,13 @@ namespace Fantome.Libraries.LeagueFileManager
             {
                 throw new OriginalManifestNotLoadedException();
             }
-            ReleaseManifest.ReleaseManifestFileEntry fileEntry = this.GameManifest.GetFile(modifiedFile.GamePath, false);
+            ReleaseManifestFileEntry fileEntry = this.GameManifest.GetFile(modifiedFile.GamePath, false);
             string installedPath = GetFileToInstallPath(modifiedFile.GamePath, fileEntry.DeployMode, LeagueRADSInstallation.FantomeFilesVersion);
             if (File.Exists(installedPath))
             {
                 File.Delete(installedPath);
             }
-            ReleaseManifest.ReleaseManifestFileEntry originalEntry = this.OriginalManifest.GetFile(modifiedFile.GamePath, false);
+            ReleaseManifestFileEntry originalEntry = this.OriginalManifest.GetFile(modifiedFile.GamePath, false);
             if (originalEntry == null)
             {
                 // Installed file was a new file, remove it.
@@ -158,6 +170,16 @@ namespace Fantome.Libraries.LeagueFileManager
         public class FileToInstallNotFoundException : Exception
         {
             public FileToInstallNotFoundException() : base("The specified file to install doesn't exist.") { }
+        }
+
+        public class NotSpecifiedFileToInstallException : Exception
+        {
+            public NotSpecifiedFileToInstallException() : base("The file to install path cannot be null.") { }
+        }
+
+        public class NotSpecifiedMD5Exception : Exception
+        {
+            public NotSpecifiedMD5Exception() : base("The MD5 checksum cannot be null.") { }
         }
 
         public class UnsupportedDeployModeException : Exception

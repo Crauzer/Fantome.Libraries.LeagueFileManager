@@ -23,9 +23,9 @@ namespace Fantome.Libraries.LeagueFileManager.Tests
 
         private static void LeagueInstallationTests()
         {
-            using (LeagueManager manager = new LeagueManager("", "C:/Riot Games/League of Legends"))
+            using (LeagueManager manager = new LeagueManager(@"D:\Chewy\Desktop", "C:/Riot Games/League of Legends"))
             {
-
+                
             }
         }
     }

@@ -11,7 +11,7 @@ namespace Fantome.Libraries.LeagueFileManager
         public readonly LeagueRADSDeployRules DeployRules = new LeagueRADSDeployRules(LeagueRADSFileDeployMode.Managed);
         public static readonly uint FantomeFilesVersion = GetReleaseValue("11.6.17.2");
 
-        public LeagueRADSInstallation(LeagueManager currentManager, string gameFolder) : base(currentManager, gameFolder)
+        public LeagueRADSInstallation(string managerInstallationFolder, string gameFolder) : base(managerInstallationFolder, gameFolder)
         {
             if (!Directory.Exists(gameFolder + "/RADS"))
             {

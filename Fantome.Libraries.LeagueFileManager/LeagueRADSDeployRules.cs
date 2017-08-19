@@ -77,7 +77,7 @@ namespace Fantome.Libraries.LeagueFileManager
             }
         }
 
-        protected class LeagueRADSDeployModeRule
+        private class LeagueRADSDeployModeRule
         {
             public readonly string Project;
             private readonly List<LeagueRADSDeployModeProjectRule> _projectRules = new List<LeagueRADSDeployModeProjectRule>();
@@ -110,7 +110,7 @@ namespace Fantome.Libraries.LeagueFileManager
                 }
             }
 
-            protected class LeagueRADSDeployModeProjectRule
+            private class LeagueRADSDeployModeProjectRule
             {
                 public readonly LeagueRADSFileDeployMode OriginalFileDeployMode;
                 public readonly LeagueRADSFileDeployMode TargetDeployMode;

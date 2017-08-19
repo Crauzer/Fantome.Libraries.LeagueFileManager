@@ -4,7 +4,7 @@ namespace Fantome.Libraries.LeagueFileManager
 {
     internal class LeagueRawInstallation : LeagueInstallation
     {
-        public LeagueRawInstallation(LeagueManager currentManager, string folder) : base(currentManager, folder)
+        public LeagueRawInstallation(string managerInstallationFolder, string folder) : base(managerInstallationFolder, folder)
         {
 
         }

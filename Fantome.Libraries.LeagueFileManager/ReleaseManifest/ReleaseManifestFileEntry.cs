@@ -153,9 +153,9 @@ namespace Fantome.Libraries.LeagueFileManager.ReleaseManifest
         /// </summary>
         public void Remove()
         {
-            if (this.Folder.Files.Contains(this))
+            if (this.Folder._files.Contains(this))
             {
-                this.Folder.Files.Remove(this);
+                this.Folder._files.Remove(this);
             }
         }
     }

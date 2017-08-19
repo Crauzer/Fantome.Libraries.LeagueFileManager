@@ -2,14 +2,14 @@
 {
     internal abstract class LeagueInstallation
     {
-        public readonly LeagueManager CurrentManager;
+        public readonly string ManagerInstallationFolder;
 
         public string Folder { get; private set; }
 
-        public LeagueInstallation(LeagueManager currentManager, string folder)
+        public LeagueInstallation(string managerInstallationFolder, string folder)
         {
-            CurrentManager = currentManager;
-            this.Folder = folder;
+            ManagerInstallationFolder = managerInstallationFolder;
+            Folder = folder;
         }
 
         public abstract void InstallFile(ModifiedFile modifiedFile);

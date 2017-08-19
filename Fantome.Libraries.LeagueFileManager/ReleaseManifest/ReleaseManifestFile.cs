@@ -110,12 +110,12 @@ namespace Fantome.Libraries.LeagueFileManager.ReleaseManifest
                 for (int i = 0; i < folderEntry.SubFolderCount; i++)
                 {
                     folders[folderEntry.SubFolderStartIndex + i].Parent = folderEntry;
-                    folderEntry.Folders.Add(folders[folderEntry.SubFolderStartIndex + i]);
+                    folderEntry._folders.Add(folders[folderEntry.SubFolderStartIndex + i]);
                 }
                 for (int i = 0; i < folderEntry.FileCount; i++)
                 {
                     files[folderEntry.FileListStartIndex + i].Folder = folderEntry;
-                    folderEntry.Files.Add(files[folderEntry.FileListStartIndex + i]);
+                    folderEntry._files.Add(files[folderEntry.FileListStartIndex + i]);
                 }
             }
             foreach (ReleaseManifestFileEntry fileEntry in files)
@@ -141,13 +141,13 @@ namespace Fantome.Libraries.LeagueFileManager.ReleaseManifest
             ReleaseManifestFolderEntry baseFolder = this.Project;
             for (int i = 0; i < folders.Length; i++)
             {
-                ReleaseManifestFolderEntry foundSubFolder = baseFolder.Folders.Find(x => String.Equals(x.Name, folders[i], StringComparison.InvariantCultureIgnoreCase));
+                ReleaseManifestFolderEntry foundSubFolder = baseFolder._folders.Find(x => String.Equals(x.Name, folders[i], StringComparison.InvariantCultureIgnoreCase));
                 if (foundSubFolder == null)
                 {
                     if (createIfNotFound)
                     {
                         ReleaseManifestFolderEntry newFolderEntry = new ReleaseManifestFolderEntry(folders[i], this.GetNameIndex(folders[i]), baseFolder);
-                        baseFolder.Folders.Add(newFolderEntry);
+                        baseFolder._folders.Add(newFolderEntry);
                         baseFolder = newFolderEntry;
                     }
                     else
@@ -181,11 +181,11 @@ namespace Fantome.Libraries.LeagueFileManager.ReleaseManifest
             }
             else
             {
-                ReleaseManifestFileEntry foundFile = gotFolder.Files.Find(x => String.Equals(x.Name, folders[folders.Length - 1], StringComparison.InvariantCultureIgnoreCase));
+                ReleaseManifestFileEntry foundFile = gotFolder._files.Find(x => String.Equals(x.Name, folders[folders.Length - 1], StringComparison.InvariantCultureIgnoreCase));
                 if (foundFile == null && createIfNotFound)
                 {
                     foundFile = new ReleaseManifestFileEntry(folders[folders.Length - 1], this.GetNameIndex(folders[folders.Length - 1]), gotFolder);
-                    gotFolder.Files.Add(foundFile);
+                    gotFolder._files.Add(foundFile);
                 }
                 return foundFile;
             }

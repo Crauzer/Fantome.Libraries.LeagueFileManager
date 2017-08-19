@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 
 namespace Fantome.Libraries.LeagueFileManager.ReleaseManifest
@@ -19,22 +20,22 @@ namespace Fantome.Libraries.LeagueFileManager.ReleaseManifest
         internal int NameIndex { get; private set; }
 
         /// <summary>
-        /// Position of the first subfolder of the current <see cref="ReleaseManifestFolderEntry"/> in the folders buffer (used for reading & writing the manifest).
+        /// Position of the first subfolder of the current <see cref="ReleaseManifestFolderEntry"/> in the folders buffer (used for reading and writing the manifest).
         /// </summary>
         internal int SubFolderStartIndex { get; set; }
 
         /// <summary>
-        /// Number of subfolders of the current <see cref="ReleaseManifestFolderEntry"/> (used for reading & writing the manifest).
+        /// Number of subfolders of the current <see cref="ReleaseManifestFolderEntry"/> (used for reading and writing the manifest).
         /// </summary>
         internal int SubFolderCount { get; private set; }
 
         /// <summary>
-        /// Position of the first file in the current <see cref="ReleaseManifestFolderEntry"/> in the files buffer (used for reading & writing the manifest).
+        /// Position of the first file in the current <see cref="ReleaseManifestFolderEntry"/> in the files buffer (used for reading and writing the manifest).
         /// </summary>
         internal int FileListStartIndex { get; set; }
 
         /// <summary>
-        /// Number of files in the current <see cref="ReleaseManifestFolderEntry"/> (used for reading & writing the manifest).
+        /// Number of files in the current <see cref="ReleaseManifestFolderEntry"/> (used for reading and writing the manifest).
         /// </summary>
         internal int FileCount { get; private set; }
 
@@ -44,20 +45,37 @@ namespace Fantome.Libraries.LeagueFileManager.ReleaseManifest
         public ReleaseManifestFolderEntry Parent { get; internal set; }
 
         /// <summary>
+        /// Editable list of subfolders of the current <see cref="ReleaseManifestFolderEntry"/> used internally.
+        /// </summary>
+        internal readonly List<ReleaseManifestFolderEntry> _folders = new List<ReleaseManifestFolderEntry>();
+
+        /// <summary>
         /// List of subfolders of the current <see cref="ReleaseManifestFolderEntry"/>.
         /// </summary>
-        public readonly List<ReleaseManifestFolderEntry> Folders = new List<ReleaseManifestFolderEntry>();
+        public readonly ReadOnlyCollection<ReleaseManifestFolderEntry> Folders;
+
+        /// <summary>
+        /// Editable list of files of the current <see cref="ReleaseManifestFolderEntry"/> used internally.
+        /// </summary>
+        internal readonly List<ReleaseManifestFileEntry> _files = new List<ReleaseManifestFileEntry>();
 
         /// <summary>
         /// List of files of the current <see cref="ReleaseManifestFolderEntry"/>.
         /// </summary>
-        public readonly List<ReleaseManifestFileEntry> Files = new List<ReleaseManifestFileEntry>();
+        public readonly ReadOnlyCollection<ReleaseManifestFileEntry> Files;
+
+
+        private ReleaseManifestFolderEntry()
+        {
+            Folders = _folders.AsReadOnly();
+            Files = _files.AsReadOnly();
+        }
 
         /// <summary>
         /// Parses Release Manifest Folder Entry content from a previously initialized <see cref="BinaryReader"/>.
         /// </summary>
         /// <param name="br"><see cref="BinaryReader"/> instance holding Release Manifest File content.</param>
-        public ReleaseManifestFolderEntry(BinaryReader br)
+        public ReleaseManifestFolderEntry(BinaryReader br) : this()
         {
             this.NameIndex = br.ReadInt32();
             this.SubFolderStartIndex = br.ReadInt32();
@@ -72,7 +90,7 @@ namespace Fantome.Libraries.LeagueFileManager.ReleaseManifest
         /// <param name="name">Name of the folder.</param>
         /// <param name="nameIndex">Position of the name of the folder in <see cref="Names"/></param>
         /// <param name="folder"><see cref="ReleaseManifestFolderEntry"/> the new folder belongs to.</param>
-        public ReleaseManifestFolderEntry(string name, int nameIndex, ReleaseManifestFolderEntry parent)
+        public ReleaseManifestFolderEntry(string name, int nameIndex, ReleaseManifestFolderEntry parent) : this()
         {
             this.Name = name;
             this.NameIndex = nameIndex;
@@ -113,9 +131,9 @@ namespace Fantome.Libraries.LeagueFileManager.ReleaseManifest
         /// </summary>
         public void Remove()
         {
-            if (this.Parent.Folders.Contains(this))
+            if (this.Parent._folders.Contains(this))
             {
-                this.Parent.Folders.Remove(this);
+                this.Parent._folders.Remove(this);
             }
         }
     }
