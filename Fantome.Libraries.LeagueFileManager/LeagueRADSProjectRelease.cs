@@ -2,6 +2,7 @@
 using System.IO;
 using Fantome.Libraries.LeagueFileManager.ReleaseManifest;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace Fantome.Libraries.LeagueFileManager
 {
@@ -56,7 +57,15 @@ namespace Fantome.Libraries.LeagueFileManager
                 throw new NotSpecifiedFileToInstallException();
 
             if (modifiedFile.MD5 == null)
-                throw new NotSpecifiedMD5Exception();
+            {
+                using (var md5 = MD5.Create())
+                {
+                    using (var stream = File.OpenRead(modifiedFile.FilePath))
+                    {
+                        modifiedFile.MD5 = md5.ComputeHash(stream);
+                    }
+                }
+            }
 
             FileInfo fileToInstall = new FileInfo(modifiedFile.FilePath);
             if (!fileToInstall.Exists)
@@ -75,7 +84,7 @@ namespace Fantome.Libraries.LeagueFileManager
             // Installing file
             string installPath = this.GetFileToInstallPath(modifiedFile.GamePath, deployMode, LeagueRADSInstallation.FantomeFilesVersion);
             Directory.CreateDirectory(Path.GetDirectoryName(installPath));
-            if ((fileEntry != null) && deployMode == ReleaseManifestFile.DeployMode.Deployed4)
+            if (fileEntry != null && (deployMode == ReleaseManifestFile.DeployMode.Deployed4 || deployMode == ReleaseManifestFile.DeployMode.Deployed0))
             {
                 // Backup deployed file
                 BackupFile(fileEntry, installPath);
@@ -117,7 +126,7 @@ namespace Fantome.Libraries.LeagueFileManager
                 throw new OriginalManifestNotLoadedException();
             }
             ReleaseManifestFileEntry fileEntry = this.GameManifest.GetFile(modifiedFile.GamePath, false);
-            string installedPath = GetFileToInstallPath(modifiedFile.GamePath, fileEntry.DeployMode, LeagueRADSInstallation.FantomeFilesVersion);
+            string installedPath = GetFileToInstallPath(modifiedFile.GamePath, fileEntry.DeployMode, fileEntry.Version);
             if (File.Exists(installedPath))
             {
                 File.Delete(installedPath);
@@ -131,7 +140,7 @@ namespace Fantome.Libraries.LeagueFileManager
             else
             {
                 // Restore original file if necessary
-                if (originalEntry.DeployMode == ReleaseManifestFile.DeployMode.Deployed4)
+                if (originalEntry.DeployMode == ReleaseManifestFile.DeployMode.Deployed4 || originalEntry.DeployMode == ReleaseManifestFile.DeployMode.Deployed0)
                 {
                     RestoreFile(originalEntry, installedPath);
                 }
@@ -152,7 +161,7 @@ namespace Fantome.Libraries.LeagueFileManager
             {
                 return String.Format("{0}/managedfiles/{1}/{2}", this.Project.GetFolder(), LeagueRADSInstallation.GetReleaseString(version), fileFullPath);
             }
-            else if (deployMode == ReleaseManifestFile.DeployMode.Deployed4)
+            else if (deployMode == ReleaseManifestFile.DeployMode.Deployed4 || deployMode == ReleaseManifestFile.DeployMode.Deployed0)
             {
                 return String.Format("{0}/releases/{1}/deploy/{2}", this.Project.GetFolder(), this.Version, fileFullPath);
             }
@@ -175,11 +184,6 @@ namespace Fantome.Libraries.LeagueFileManager
         public class NotSpecifiedFileToInstallException : Exception
         {
             public NotSpecifiedFileToInstallException() : base("The file to install path cannot be null.") { }
-        }
-
-        public class NotSpecifiedMD5Exception : Exception
-        {
-            public NotSpecifiedMD5Exception() : base("The MD5 checksum cannot be null.") { }
         }
 
         public class UnsupportedDeployModeException : Exception
