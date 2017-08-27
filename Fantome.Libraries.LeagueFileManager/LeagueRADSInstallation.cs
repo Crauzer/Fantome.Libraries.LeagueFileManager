@@ -22,7 +22,6 @@ namespace Fantome.Libraries.LeagueFileManager
                 throw new InvalidRADSInstallationException("projects folder doesn't exist.");
             }
             this.LoadProjects();
-            this.LoadOriginalManifests();
         }
 
         private void LoadProjects()
@@ -54,22 +53,16 @@ namespace Fantome.Libraries.LeagueFileManager
             }
         }
 
-        private void LoadOriginalManifests()
+        public override void InstallFile(string gamePath, string filePath, byte[] md5)
         {
-            foreach (LeagueRADSProject project in this.Projects)
-            {
-                project.LoadOriginalManifests();
-            }
+            string[] splitGamePath = SplitGamePath(gamePath);
+            GetProjectLatestRelease(splitGamePath[0]).InstallFile(splitGamePath[1], filePath, md5, DeployRules);
         }
 
-        public override void InstallFile(ModifiedFile modifiedFile)
+        public override void RevertFile(string gamePath, byte[] md5)
         {
-            GetProjectLatestRelease(modifiedFile.Project).InstallFile(modifiedFile, DeployRules);
-        }
-
-        public override void RevertFile(ModifiedFile modifiedFile)
-        {
-            GetProjectLatestRelease(modifiedFile.Project).RevertFile(modifiedFile);
+            string[] splitGamePath = SplitGamePath(gamePath);
+            GetProjectLatestRelease(splitGamePath[0]).RevertFile(splitGamePath[1], md5);
         }
 
         public static uint GetReleaseValue(string releaseString)
@@ -98,6 +91,16 @@ namespace Fantome.Libraries.LeagueFileManager
             return (releaseString.Split('.').Length == 4);
         }
 
+        private static string[] SplitGamePath(string gamePath)
+        {
+            int projectIndex = gamePath.IndexOf('/');
+            if (projectIndex == -1)
+            {
+                throw new InvalidInputGamePathException();
+            }
+            return new string[] { gamePath.Substring(0, projectIndex), gamePath.Substring(projectIndex + 1) };
+        }
+
         private LeagueRADSProjectRelease GetProjectLatestRelease(string projectName)
         {
             LeagueRADSProject foundProject = GetProject(projectName);
@@ -111,6 +114,14 @@ namespace Fantome.Libraries.LeagueFileManager
                 throw new ProjectReleaseNotFoundException();
             }
             return foundProjectRelease;
+        }
+
+        public override void Dispose()
+        {
+            foreach(LeagueRADSProject project in Projects)
+            {
+                project.Dispose();
+            }
         }
 
         public class InvalidRADSInstallationException : Exception
@@ -130,12 +141,17 @@ namespace Fantome.Libraries.LeagueFileManager
 
         public class ProjectNotFoundException : Exception
         {
-            public ProjectNotFoundException() : base("The specified project was not found in the current League Installation") { }
+            public ProjectNotFoundException() : base("The specified project was not found in the current League Installation.") { }
         }
 
         public class ProjectReleaseNotFoundException : Exception
         {
-            public ProjectReleaseNotFoundException() : base("The release was not found for the specified project") { }
+            public ProjectReleaseNotFoundException() : base("The release was not found for the specified project.") { }
+        }
+
+        public class InvalidInputGamePathException : Exception
+        {
+            public InvalidInputGamePathException() : base("The specified game path is not valid.") { }
         }
     }
 }

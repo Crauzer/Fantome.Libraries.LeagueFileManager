@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 
 namespace Fantome.Libraries.LeagueFileManager
 {
-    internal class LeagueRADSProjectRelease
+    internal class LeagueRADSProjectRelease : IDisposable
     {
         public readonly LeagueRADSProject Project;
         public readonly string Version;
@@ -29,9 +29,10 @@ namespace Fantome.Libraries.LeagueFileManager
             {
                 throw new ReleaseManifestNotFoundException();
             }
+            this.LoadOriginalManifest();
         }
 
-        public void LoadOriginalManifest()
+        private void LoadOriginalManifest()
         {
             string originalManifestFolder = String.Format("{0}/{1}/manifests/{2}",
                 this.Project.Installation.ManagerInstallationFolder,
@@ -51,52 +52,53 @@ namespace Fantome.Libraries.LeagueFileManager
             return String.Format("{0}/releases/{1}", this.Project.GetFolder(), this.Version);
         }
 
-        public void InstallFile(ModifiedFile modifiedFile, LeagueRADSDeployRules deployRules)
+        public void InstallFile(string gamePath, string filePath, byte[] md5, LeagueRADSDeployRules deployRules)
         {
-            if (modifiedFile.FilePath == null)
+            if (filePath == null)
                 throw new NotSpecifiedFileToInstallException();
 
-            if (modifiedFile.MD5 == null)
+            FileInfo fileToInstall = new FileInfo(filePath);
+            if (!fileToInstall.Exists)
+                throw new FileToInstallNotFoundException();
+
+            if (md5 == null)
             {
-                using (var md5 = MD5.Create())
+                using (var newMD5 = MD5.Create())
                 {
-                    using (var stream = File.OpenRead(modifiedFile.FilePath))
+                    using (var stream = File.OpenRead(filePath))
                     {
-                        modifiedFile.MD5 = md5.ComputeHash(stream);
+                        md5 = newMD5.ComputeHash(stream);
                     }
                 }
             }
 
-            FileInfo fileToInstall = new FileInfo(modifiedFile.FilePath);
-            if (!fileToInstall.Exists)
-                throw new FileToInstallNotFoundException();
-
             // Getting the matching file entry (null if new file)
-            ReleaseManifestFileEntry fileEntry = this.GameManifest.GetFile(modifiedFile.GamePath, false);
+            ReleaseManifestFileEntry fileEntry = this.GameManifest.GetFile(gamePath, false);
 
             // File is already installed, don't install it again
-            if (fileEntry != null && fileEntry.MD5.SequenceEqual(modifiedFile.MD5))
+            if (fileEntry != null && fileEntry.MD5.SequenceEqual(md5))
                 return;
 
             // Finding the deploy mode to use
             ReleaseManifestFile.DeployMode deployMode = deployRules.GetTargetDeployMode(this.Project.Name, fileEntry);
 
             // Installing file
-            string installPath = this.GetFileToInstallPath(modifiedFile.GamePath, deployMode, LeagueRADSInstallation.FantomeFilesVersion);
+            string installPath = this.GetFileToInstallPath(gamePath, deployMode, LeagueRADSInstallation.FantomeFilesVersion);
             Directory.CreateDirectory(Path.GetDirectoryName(installPath));
             if (fileEntry != null && (deployMode == ReleaseManifestFile.DeployMode.Deployed4 || deployMode == ReleaseManifestFile.DeployMode.Deployed0))
             {
                 // Backup deployed file
                 BackupFile(fileEntry, installPath);
             }
-            File.Copy(modifiedFile.FilePath, installPath, true);
+
+            File.Copy(filePath, installPath, true);
 
             // Setting manifest values
             if (fileEntry == null)
             {
-                fileEntry = this.GameManifest.GetFile(modifiedFile.GamePath, true);
+                fileEntry = this.GameManifest.GetFile(gamePath, true);
             }
-            fileEntry.MD5 = modifiedFile.MD5;
+            fileEntry.MD5 = md5;
             fileEntry.DeployMode = deployMode;
             fileEntry.SizeRaw = (int)fileToInstall.Length;
             fileEntry.SizeCompressed = fileEntry.SizeRaw;
@@ -106,43 +108,67 @@ namespace Fantome.Libraries.LeagueFileManager
 
         private void BackupFile(ReleaseManifestFileEntry fileEntry, string filePath)
         {
-            File.Copy(filePath, this.GetBackupPath(fileEntry), false);
+            string backupPath = this.GetBackupPath(fileEntry);
+            if (!Project.BackupArchive.HasFile(backupPath))
+            {
+                using (FileStream fs = new FileStream(filePath, FileMode.Open))
+                {
+                    Project.BackupArchive.AddFile(backupPath, fs);
+                }
+            }
         }
 
         private void RestoreFile(ReleaseManifestFileEntry fileEntry, string filePath)
         {
-            File.Copy(this.GetBackupPath(fileEntry), filePath, true);
+            string backupPath = this.GetBackupPath(fileEntry);
+            using (Stream backupStream = Project.BackupArchive.GetBackupFileStream(backupPath))
+            {
+                using (FileStream fs = new FileStream(filePath, FileMode.Create))
+                {
+                    backupStream.CopyTo(fs);
+                }
+            }
         }
 
         private string GetBackupPath(ReleaseManifestFileEntry fileEntry)
         {
-            return String.Format("{0}/{1}/backup/{2}/{3}", this.Project.Installation.ManagerInstallationFolder, this.Project.Name, LeagueRADSInstallation.GetReleaseString(fileEntry.Version), fileEntry.GetFullPath());
+            return Path.Combine(LeagueRADSInstallation.GetReleaseString(fileEntry.Version), fileEntry.GetFullPath());
         }
 
-        public void RevertFile(ModifiedFile modifiedFile)
+        public void RevertFile(string gamePath, byte[] md5)
         {
-            if (this.OriginalManifest == null)
-            {
-                throw new OriginalManifestNotLoadedException();
-            }
-            ReleaseManifestFileEntry fileEntry = this.GameManifest.GetFile(modifiedFile.GamePath, false);
-            string installedPath = GetFileToInstallPath(modifiedFile.GamePath, fileEntry.DeployMode, fileEntry.Version);
-            if (File.Exists(installedPath))
-            {
-                File.Delete(installedPath);
-            }
-            ReleaseManifestFileEntry originalEntry = this.OriginalManifest.GetFile(modifiedFile.GamePath, false);
+            ReleaseManifestFileEntry fileEntry = this.GameManifest.GetFile(gamePath, false);
+            if (fileEntry == null)
+                throw new NotFoundFileEntryException();
+
+            if (md5 != null && !fileEntry.MD5.SequenceEqual(md5))
+                return;
+
+            string installedPath = GetFileToInstallPath(gamePath, fileEntry.DeployMode, fileEntry.Version);
+            ReleaseManifestFileEntry originalEntry = this.OriginalManifest.GetFile(gamePath, false);
+
             if (originalEntry == null)
             {
                 // Installed file was a new file, remove it.
+                if (File.Exists(installedPath))
+                {
+                    File.Delete(installedPath);
+                }
                 fileEntry.Remove();
             }
             else
             {
                 // Restore original file if necessary
-                if (originalEntry.DeployMode == ReleaseManifestFile.DeployMode.Deployed4 || originalEntry.DeployMode == ReleaseManifestFile.DeployMode.Deployed0)
+                if (HasToRestore(originalEntry.DeployMode, fileEntry.DeployMode))
                 {
-                    RestoreFile(originalEntry, installedPath);
+                    if (!originalEntry.MD5.SequenceEqual(fileEntry.MD5))
+                    {
+                        RestoreFile(originalEntry, installedPath);
+                    }
+                }
+                else if (File.Exists(installedPath))
+                {
+                    File.Delete(installedPath);
                 }
                 // Revert original values
                 fileEntry.DeployMode = originalEntry.DeployMode;
@@ -171,6 +197,25 @@ namespace Fantome.Libraries.LeagueFileManager
             }
         }
 
+        private static bool HasToRestore(ReleaseManifestFile.DeployMode originalDeployMode, ReleaseManifestFile.DeployMode installedDeployedMode)
+        {
+            return ((originalDeployMode == ReleaseManifestFile.DeployMode.Deployed4 || originalDeployMode == ReleaseManifestFile.DeployMode.Deployed0)
+                    && (installedDeployedMode == ReleaseManifestFile.DeployMode.Deployed4 || installedDeployedMode == ReleaseManifestFile.DeployMode.Deployed0));
+        }
+
+        public void Dispose()
+        {
+            if (HasChanged)
+            {
+                GameManifest.Save();
+            }
+        }
+
+        public class NotFoundFileEntryException : Exception
+        {
+            public NotFoundFileEntryException() : base("The file entry you are looking for was not found.") { }
+        }
+
         public class ReleaseManifestNotFoundException : Exception
         {
             public ReleaseManifestNotFoundException() : base("The release manifest was not found for this release.") { }
@@ -189,11 +234,6 @@ namespace Fantome.Libraries.LeagueFileManager
         public class UnsupportedDeployModeException : Exception
         {
             public UnsupportedDeployModeException() : base("The specified deploy mode is not supported yet.") { }
-        }
-
-        public class OriginalManifestNotLoadedException : Exception
-        {
-            public OriginalManifestNotLoadedException() : base("The original manifest was not loaded.") { }
         }
     }
 }

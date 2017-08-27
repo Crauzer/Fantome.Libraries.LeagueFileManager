@@ -24,36 +24,39 @@ namespace Fantome.Libraries.LeagueFileManager
             }
         }
 
-        public void InstallFile(ModifiedFile modifiedFile)
+        public void InstallFile(string gamePath, string filePath, byte[] md5)
         {
-            _installation.InstallFile(modifiedFile);
+            _installation.InstallFile(gamePath, filePath, md5);
         }
 
-        public void RevertFile(ModifiedFile modifiedFile)
+        public void InstallFile(string gamePath, string filePath)
         {
-            _installation.RevertFile(modifiedFile);
+            InstallFile(gamePath, filePath, null);
         }
 
-        public void AddDeployModeRule(string projectName, LeagueRADSFileDeployMode originalDeployMode, LeagueRADSFileDeployMode targetDeployMode)
+        public void RevertFile(string gamePath, byte[] md5)
+        {
+            _installation.RevertFile(gamePath, md5);
+        }
+
+        public void RevertFile(string gamePath)
+        {
+            RevertFile(gamePath, null);
+        }
+
+        public void AddDeployModeRule(LeagueRADSFileDeployMode originalDeployMode, LeagueRADSFileDeployMode targetDeployMode)
+        {
+            AddDeployModeRule(originalDeployMode, targetDeployMode, null);
+        }
+
+        public void AddDeployModeRule(LeagueRADSFileDeployMode originalDeployMode, LeagueRADSFileDeployMode targetDeployMode, string projectName)
         {
             (_installation as LeagueRADSInstallation)?.DeployRules.AddDeployModeRule(projectName, originalDeployMode, targetDeployMode);
         }
 
         public void Dispose()
         {
-            if (_installation is LeagueRADSInstallation)
-            {
-                foreach (LeagueRADSProject project in (_installation as LeagueRADSInstallation).Projects)
-                {
-                    foreach (LeagueRADSProjectRelease release in project.Releases)
-                    {
-                        if (release.HasChanged)
-                        {
-                            release.GameManifest.Save();
-                        }
-                    }
-                }
-            }
+            _installation.Dispose();
         }
 
         private string GetManagerInstallationFolder(string gamePath)

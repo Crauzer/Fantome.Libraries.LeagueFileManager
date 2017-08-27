@@ -9,12 +9,17 @@ namespace Fantome.Libraries.LeagueFileManager
 
         }
 
-        public override void InstallFile(ModifiedFile modifiedFile)
+        public override void Dispose()
         {
             throw new NotImplementedException();
         }
 
-        public override void RevertFile(ModifiedFile modifiedFile)
+        public override void InstallFile(string gamePath, string filePath, byte[] md5)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void RevertFile(string gamePath, byte[] md5)
         {
             throw new NotImplementedException();
         }

@@ -37,6 +37,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -45,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="LeagueBackupArchive.cs" />
     <Compile Include="LeagueRADSDeployRules.cs" />
     <Compile Include="LeagueInstallation.cs" />
     <Compile Include="LeagueRADSInstallation.cs" />
@@ -52,7 +54,6 @@
     <Compile Include="LeagueRADSProjectRelease.cs" />
     <Compile Include="LeagueManager.cs" />
     <Compile Include="LeagueRawInstallation.cs" />
-    <Compile Include="ModifiedFile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReleaseManifest\ReleaseManifestFile.cs" />
     <Compile Include="ReleaseManifest\ReleaseManifestFileEntry.cs" />

@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 
 namespace Fantome.Libraries.LeagueFileManager
 {
-    internal class LeagueRADSProject
+    internal class LeagueRADSProject : IDisposable
     {
         public readonly LeagueRADSInstallation Installation;
         public readonly string Name;
         public readonly List<LeagueRADSProjectRelease> Releases = new List<LeagueRADSProjectRelease>();
+        public readonly LeagueBackupArchive BackupArchive;
 
         public LeagueRADSProject(LeagueRADSInstallation installation, string projectName, List<string> releases)
         {
@@ -27,14 +30,10 @@ namespace Fantome.Libraries.LeagueFileManager
             {
                 throw new NoValidReleaseException();
             }
-        }
 
-        public void LoadOriginalManifests()
-        {
-            foreach (LeagueRADSProjectRelease release in this.Releases)
-            {
-                release.LoadOriginalManifest();
-            }
+            // Load backup archive if it exists
+            string backupArchivePath = Path.Combine(Installation.ManagerInstallationFolder, Name, "backup.zip");
+            this.BackupArchive = new LeagueBackupArchive(backupArchivePath);
         }
 
         public string GetFolder()
@@ -59,6 +58,15 @@ namespace Fantome.Libraries.LeagueFileManager
                 }
             }
             return latestRelease;
+        }
+
+        public void Dispose()
+        {
+            foreach (LeagueRADSProjectRelease release in Releases)
+            {
+                release.Dispose();
+            }
+            BackupArchive.Dispose();
         }
 
         public class NoValidReleaseException : Exception

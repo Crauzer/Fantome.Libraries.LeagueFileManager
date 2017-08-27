@@ -1,6 +1,8 @@
-﻿namespace Fantome.Libraries.LeagueFileManager
+﻿using System;
+
+namespace Fantome.Libraries.LeagueFileManager
 {
-    internal abstract class LeagueInstallation
+    internal abstract class LeagueInstallation : IDisposable
     {
         public readonly string ManagerInstallationFolder;
 
@@ -12,8 +14,10 @@
             Folder = folder;
         }
 
-        public abstract void InstallFile(ModifiedFile modifiedFile);
+        public abstract void InstallFile(string gamePath, string filePath, byte[] md5);
 
-        public abstract void RevertFile(ModifiedFile modifiedFile);
+        public abstract void RevertFile(string gamePath, byte[] md5);
+
+        public abstract void Dispose();
     }
 }
