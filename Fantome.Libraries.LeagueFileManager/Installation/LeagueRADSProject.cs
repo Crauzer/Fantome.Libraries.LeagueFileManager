@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 
-namespace Fantome.Libraries.LeagueFileManager
+namespace Fantome.Libraries.LeagueFileManager.Installation
 {
     internal class LeagueRADSProject : IDisposable
     {

@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 
-namespace Fantome.Libraries.LeagueFileManager
+namespace Fantome.Libraries.LeagueFileManager.Installation
 {
     internal class LeagueRADSInstallation : LeagueInstallation
     {
         public readonly List<LeagueRADSProject> Projects = new List<LeagueRADSProject>();
-        public readonly LeagueRADSDeployRules DeployRules = new LeagueRADSDeployRules(LeagueRADSFileDeployMode.Managed);
+        public readonly LeagueRADSDeployRules DeployRules;
         public static readonly uint FantomeFilesVersion = GetReleaseValue("11.6.17.2");
 
-        public LeagueRADSInstallation(string managerInstallationFolder, string gameFolder) : base(managerInstallationFolder, gameFolder)
+        public LeagueRADSInstallation(string managerInstallationFolder, string gameFolder, LeagueRADSDeployRules deployRules) : base(managerInstallationFolder, gameFolder)
         {
             if (!Directory.Exists(gameFolder + "/RADS"))
             {
@@ -22,6 +22,7 @@ namespace Fantome.Libraries.LeagueFileManager
                 throw new InvalidRADSInstallationException("projects folder doesn't exist.");
             }
             this.LoadProjects();
+            this.DeployRules = deployRules;
         }
 
         private void LoadProjects()

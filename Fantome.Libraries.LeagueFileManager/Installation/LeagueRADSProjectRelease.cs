@@ -4,7 +4,7 @@ using Fantome.Libraries.LeagueFileManager.ReleaseManifest;
 using System.Linq;
 using System.Security.Cryptography;
 
-namespace Fantome.Libraries.LeagueFileManager
+namespace Fantome.Libraries.LeagueFileManager.Installation
 {
     internal class LeagueRADSProjectRelease : IDisposable
     {

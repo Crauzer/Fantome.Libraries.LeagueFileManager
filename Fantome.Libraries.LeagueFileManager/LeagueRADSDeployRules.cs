@@ -4,16 +4,16 @@ using static Fantome.Libraries.LeagueFileManager.ReleaseManifest.ReleaseManifest
 
 namespace Fantome.Libraries.LeagueFileManager
 {
-    internal class LeagueRADSDeployRules
+    public class LeagueRADSDeployRules
     {
         private readonly List<LeagueRADSDeployModeRule> _rules = new List<LeagueRADSDeployModeRule>();
 
         public LeagueRADSDeployRules(LeagueRADSFileDeployMode defaultTargetDeployMode)
         {
-            this.AddDeployModeRule(null, LeagueRADSFileDeployMode.Default, defaultTargetDeployMode);
+            this.AddDeployModeRule(LeagueRADSFileDeployMode.Default, defaultTargetDeployMode);
         }
 
-        public void AddDeployModeRule(string projectName, LeagueRADSFileDeployMode originalDeployMode, LeagueRADSFileDeployMode targetDeployMode)
+        public void AddDeployModeRule(LeagueRADSFileDeployMode originalDeployMode, LeagueRADSFileDeployMode targetDeployMode, string projectName = null)
         {
             LeagueRADSDeployModeRule foundDeployModeRule = _rules.Find(x => x.Project == projectName);
             if (foundDeployModeRule == null)
@@ -22,6 +22,26 @@ namespace Fantome.Libraries.LeagueFileManager
                 _rules.Add(foundDeployModeRule);
             }
             foundDeployModeRule.AddDeployModeProjectRule(originalDeployMode, targetDeployMode);
+        }
+
+        public DeployMode GetTargetDeployMode(string project, ReleaseManifest.ReleaseManifestFileEntry originalFileEntry)
+        {
+            LeagueRADSFileDeployMode targetDeployMode = GetTargetLeagueDeployMode(project, originalFileEntry);
+            switch (targetDeployMode)
+            {
+                case LeagueRADSFileDeployMode.Deployed0:
+                    return DeployMode.Deployed0;
+                case LeagueRADSFileDeployMode.Managed:
+                    return DeployMode.Managed;
+                case LeagueRADSFileDeployMode.RAFCompressed:
+                    return DeployMode.RAFCompressed;
+                case LeagueRADSFileDeployMode.RAFRaw:
+                    return DeployMode.RAFRaw;
+                case LeagueRADSFileDeployMode.Deployed4:
+                    return DeployMode.Deployed4;
+                default:
+                    throw new InvalidTargetDeployModeException();
+            }
         }
 
         private LeagueRADSFileDeployMode GetTargetLeagueDeployMode(string project, ReleaseManifest.ReleaseManifestFileEntry originalFileEntry)
@@ -55,26 +75,6 @@ namespace Fantome.Libraries.LeagueFileManager
                 }
             }
             return foundRule.GetTargetDeployMode(originalDeployMode);
-        }
-
-        public DeployMode GetTargetDeployMode(string project, ReleaseManifest.ReleaseManifestFileEntry originalFileEntry)
-        {
-            LeagueRADSFileDeployMode targetDeployMode = GetTargetLeagueDeployMode(project, originalFileEntry);
-            switch (targetDeployMode)
-            {
-                case LeagueRADSFileDeployMode.Deployed0:
-                    return DeployMode.Deployed0;
-                case LeagueRADSFileDeployMode.Managed:
-                    return DeployMode.Managed;
-                case LeagueRADSFileDeployMode.RAFCompressed:
-                    return DeployMode.RAFCompressed;
-                case LeagueRADSFileDeployMode.RAFRaw:
-                    return DeployMode.RAFRaw;
-                case LeagueRADSFileDeployMode.Deployed4:
-                    return DeployMode.Deployed4;
-                default:
-                    throw new InvalidTargetDeployModeException();
-            }
         }
 
         private class LeagueRADSDeployModeRule

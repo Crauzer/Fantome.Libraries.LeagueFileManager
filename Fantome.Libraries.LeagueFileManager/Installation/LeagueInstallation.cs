@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Fantome.Libraries.LeagueFileManager
+namespace Fantome.Libraries.LeagueFileManager.Installation
 {
     internal abstract class LeagueInstallation : IDisposable
     {

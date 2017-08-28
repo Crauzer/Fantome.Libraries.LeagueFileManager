@@ -46,14 +46,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="LeagueBackupArchive.cs" />
+    <Compile Include="Installation\LeagueBackupArchive.cs" />
     <Compile Include="LeagueRADSDeployRules.cs" />
-    <Compile Include="LeagueInstallation.cs" />
-    <Compile Include="LeagueRADSInstallation.cs" />
-    <Compile Include="LeagueRADSProject.cs" />
-    <Compile Include="LeagueRADSProjectRelease.cs" />
+    <Compile Include="Installation\LeagueInstallation.cs" />
+    <Compile Include="Installation\LeagueRADSInstallation.cs" />
+    <Compile Include="Installation\LeagueRADSProject.cs" />
+    <Compile Include="Installation\LeagueRADSProjectRelease.cs" />
     <Compile Include="LeagueManager.cs" />
-    <Compile Include="LeagueRawInstallation.cs" />
+    <Compile Include="Installation\LeagueRawInstallation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReleaseManifest\ReleaseManifestFile.cs" />
     <Compile Include="ReleaseManifest\ReleaseManifestFileEntry.cs" />
@@ -64,5 +64,6 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

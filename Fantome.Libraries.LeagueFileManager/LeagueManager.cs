@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Fantome.Libraries.LeagueFileManager.Installation;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,13 +11,15 @@ namespace Fantome.Libraries.LeagueFileManager
         private readonly LeagueInstallation _installation;
         private readonly string _managerFolderPath;
 
-        public LeagueManager(string managerFolderPath, string gamePath)
+        public LeagueManager(string managerFolderPath, string gamePath) : this(managerFolderPath, gamePath, new LeagueRADSDeployRules(LeagueRADSFileDeployMode.Managed)) { }
+
+        public LeagueManager(string managerFolderPath, string gamePath, LeagueRADSDeployRules deployRules)
         {
             _managerFolderPath = managerFolderPath;
             string managerInstallationFolder = GetManagerInstallationFolder(gamePath);
             if (Directory.Exists(gamePath + "/RADS"))
             {
-                _installation = new LeagueRADSInstallation(managerInstallationFolder, gamePath);
+                _installation = new LeagueRADSInstallation(managerInstallationFolder, gamePath, deployRules);
             }
             else
             {
@@ -24,34 +27,14 @@ namespace Fantome.Libraries.LeagueFileManager
             }
         }
 
-        public void InstallFile(string gamePath, string filePath, byte[] md5)
+        public void InstallFile(string gamePath, string filePath, byte[] md5 = null)
         {
             _installation.InstallFile(gamePath, filePath, md5);
         }
-
-        public void InstallFile(string gamePath, string filePath)
-        {
-            InstallFile(gamePath, filePath, null);
-        }
-
-        public void RevertFile(string gamePath, byte[] md5)
+        
+        public void RevertFile(string gamePath, byte[] md5 = null)
         {
             _installation.RevertFile(gamePath, md5);
-        }
-
-        public void RevertFile(string gamePath)
-        {
-            RevertFile(gamePath, null);
-        }
-
-        public void AddDeployModeRule(LeagueRADSFileDeployMode originalDeployMode, LeagueRADSFileDeployMode targetDeployMode)
-        {
-            AddDeployModeRule(originalDeployMode, targetDeployMode, null);
-        }
-
-        public void AddDeployModeRule(LeagueRADSFileDeployMode originalDeployMode, LeagueRADSFileDeployMode targetDeployMode, string projectName)
-        {
-            (_installation as LeagueRADSInstallation)?.DeployRules.AddDeployModeRule(projectName, originalDeployMode, targetDeployMode);
         }
 
         public void Dispose()
@@ -66,7 +49,7 @@ namespace Fantome.Libraries.LeagueFileManager
             if (foundInstallation == null)
             {
                 int currentID = 1;
-                while (savedInstallations.Find(x => x.ID == currentID) != null)
+                while (savedInstallations.Exists(x => x.ID == currentID))
                 {
                     currentID++;
                 }
