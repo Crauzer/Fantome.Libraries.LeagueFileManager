@@ -56,6 +56,7 @@ namespace Fantome.Libraries.LeagueFileManager.Installation
 
         public override void InstallFile(string gamePath, string filePath, byte[] md5)
         {
+            base.InstallFile(gamePath, filePath, md5);
             string[] splitGamePath = SplitGamePath(gamePath);
             GetProjectLatestRelease(splitGamePath[0]).InstallFile(splitGamePath[1], filePath, md5, DeployRules);
         }
@@ -119,7 +120,7 @@ namespace Fantome.Libraries.LeagueFileManager.Installation
 
         public override void Dispose()
         {
-            foreach(LeagueRADSProject project in Projects)
+            foreach (LeagueRADSProject project in Projects)
             {
                 project.Dispose();
             }

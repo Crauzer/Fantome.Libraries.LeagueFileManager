@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 
 namespace Fantome.Libraries.LeagueFileManager.RiotArchive
 {
@@ -95,7 +95,7 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
                 this._raf._dataStream.Seek((int)this.Offset + 2, SeekOrigin.Begin);
                 data = new byte[this.Length - 6];
                 this._raf._dataStream.Read(data, 0, (int)this.Length - 6);
-                return RAF.GetDecompressedData(data);
+                return Inflate(data);
             }
             else
             {
@@ -104,27 +104,6 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
                 this._raf._dataStream.Read(data, 0, (int)this.Length);
                 return data;
             }
-        }
-
-        /// <summary>
-        /// Calculates the hash of <see cref="Path"/>.
-        /// </summary>
-        private uint GetPathHash()
-        {
-            uint hash = 0;
-            uint temp = 0;
-            string path = this.Path.ToLower(new System.Globalization.CultureInfo("en-US", false));
-            foreach (char chr in path)
-            {
-                hash = (hash << 4) + chr;
-                temp = hash & 0xf0000000;
-                if (temp != 0)
-                {
-                    hash = hash ^ (temp >> 24);
-                    hash = hash ^ temp;
-                }
-            }
-            return hash;
         }
 
         /// <summary>
@@ -158,6 +137,49 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
                 // Hash collision
                 return String.Compare(this.Path, other.Path, true);
             }
+        }
+
+        /// <summary>
+        /// Calculates the hash of <see cref="Path"/>.
+        /// </summary>
+        private uint GetPathHash()
+        {
+            uint hash = 0;
+            uint temp = 0;
+            string path = this.Path.ToLower(new System.Globalization.CultureInfo("en-US", false));
+            foreach (char chr in path)
+            {
+                hash = (hash << 4) + chr;
+                temp = hash & 0xf0000000;
+                if (temp != 0)
+                {
+                    hash = hash ^ (temp >> 24);
+                    hash = hash ^ temp;
+                }
+            }
+            return hash;
+        }
+
+        /// <summary>
+        /// Decompresses the specified data.
+        /// </summary>
+        /// <param name="compressedData">Data to decompress.</param>
+        /// <returns>The decompressed data.</returns>
+        private static byte[] Inflate(byte[] compressedData)
+        {
+            byte[] decompressedData = null;
+            using (MemoryStream compressedStream = new MemoryStream(compressedData))
+            {
+                using (MemoryStream rawStream = new MemoryStream())
+                {
+                    using (DeflateStream decompressionStream = new DeflateStream(compressedStream, CompressionMode.Decompress))
+                    {
+                        decompressionStream.CopyTo(rawStream);
+                    }
+                    decompressedData = rawStream.ToArray();
+                }
+            }
+            return decompressedData;
         }
     }
 }

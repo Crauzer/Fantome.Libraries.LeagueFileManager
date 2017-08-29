@@ -61,71 +61,6 @@ namespace Fantome.Libraries.LeagueFileManager.ReleaseManifest
         }
 
         /// <summary>
-        /// Parses Release Manifest File content from a previously initialized <see cref="BinaryReader"/>.
-        /// </summary>
-        /// <param name="br"><see cref="BinaryReader"/> instance holding Release Manifest File content.</param>
-        private void Read(BinaryReader br)
-        {
-            string readMagic = Encoding.ASCII.GetString(br.ReadBytes(4));
-            if (!String.Equals(readMagic, "RLSM"))
-            {
-                throw new InvalidMagicNumberException(readMagic);
-            }
-            this.MajorVersion = br.ReadInt16();
-            this.MinorVersion = br.ReadInt16();
-
-            int projectNameIndex = br.ReadInt32();
-            this.ReleaseVersion = br.ReadUInt32();
-
-            int folderCount = br.ReadInt32();
-
-            List<ReleaseManifestFolderEntry> folders = new List<ReleaseManifestFolderEntry>();
-            for (int i = 0; i < folderCount; i++)
-            {
-                folders.Add(new ReleaseManifestFolderEntry(br));
-            }
-
-            int fileCount = br.ReadInt32();
-
-            List<ReleaseManifestFileEntry> files = new List<ReleaseManifestFileEntry>();
-            for (int i = 0; i < fileCount; i++)
-            {
-                files.Add(new ReleaseManifestFileEntry(br));
-            }
-
-            int nameCount = br.ReadInt32();
-            int nameSectionLength = br.ReadInt32();
-            this.Names.AddRange(Encoding.ASCII.GetString(br.ReadBytes(nameSectionLength)).Split('\0'));
-            if (nameCount != this.Names.Count)
-            {
-                this.Names.RemoveRange(nameCount, this.Names.Count - nameCount);
-            }
-            
-            this.ProjectName = this.Names[projectNameIndex];
-
-            // Assigning names and parent/sub entries to all file and folder entries
-            foreach (ReleaseManifestFolderEntry folderEntry in folders)
-            {
-                folderEntry.Name = this.Names[folderEntry.NameIndex];
-                for (int i = 0; i < folderEntry.SubFolderCount; i++)
-                {
-                    folders[folderEntry.SubFolderStartIndex + i].Parent = folderEntry;
-                    folderEntry._folders.Add(folders[folderEntry.SubFolderStartIndex + i]);
-                }
-                for (int i = 0; i < folderEntry.FileCount; i++)
-                {
-                    files[folderEntry.FileListStartIndex + i].Folder = folderEntry;
-                    folderEntry._files.Add(files[folderEntry.FileListStartIndex + i]);
-                }
-            }
-            foreach (ReleaseManifestFileEntry fileEntry in files)
-            {
-                fileEntry.Name = this.Names[fileEntry.NameIndex];
-            }
-            this.Project = folders[0];
-        }
-
-        /// <summary>
         /// Finds a <see cref="ReleaseManifestFolderEntry"/> in the current <see cref="ReleaseManifest"/>.
         /// </summary>
         /// <param name="path">Path to the folder you want to get.</param>
@@ -192,20 +127,6 @@ namespace Fantome.Libraries.LeagueFileManager.ReleaseManifest
         }
 
         /// <summary>
-        /// Returns the position of the specified name in <see cref="Names"/>. If the specified name was not found in the list, it is added to it.
-        /// </summary>
-        private int GetNameIndex(string name)
-        {
-            int gotIndex = this.Names.IndexOf(name);
-            if (gotIndex == -1)
-            {
-                gotIndex = this.Names.Count;
-                this.Names.Add(name);
-            }
-            return gotIndex;
-        }
-
-        /// <summary>
         /// Saves the current <see cref="ReleaseManifest"/> at the initially specified path.
         /// </summary>
         public void Save()
@@ -223,6 +144,71 @@ namespace Fantome.Libraries.LeagueFileManager.ReleaseManifest
             {
                 this.Write(bw);
             }
+        }
+
+        /// <summary>
+        /// Parses Release Manifest File content from a previously initialized <see cref="BinaryReader"/>.
+        /// </summary>
+        /// <param name="br"><see cref="BinaryReader"/> instance holding Release Manifest File content.</param>
+        private void Read(BinaryReader br)
+        {
+            string readMagic = Encoding.ASCII.GetString(br.ReadBytes(4));
+            if (!String.Equals(readMagic, "RLSM"))
+            {
+                throw new InvalidMagicNumberException(readMagic);
+            }
+            this.MajorVersion = br.ReadInt16();
+            this.MinorVersion = br.ReadInt16();
+
+            int projectNameIndex = br.ReadInt32();
+            this.ReleaseVersion = br.ReadUInt32();
+
+            int folderCount = br.ReadInt32();
+
+            List<ReleaseManifestFolderEntry> folders = new List<ReleaseManifestFolderEntry>();
+            for (int i = 0; i < folderCount; i++)
+            {
+                folders.Add(new ReleaseManifestFolderEntry(br));
+            }
+
+            int fileCount = br.ReadInt32();
+
+            List<ReleaseManifestFileEntry> files = new List<ReleaseManifestFileEntry>();
+            for (int i = 0; i < fileCount; i++)
+            {
+                files.Add(new ReleaseManifestFileEntry(br));
+            }
+
+            int nameCount = br.ReadInt32();
+            int nameSectionLength = br.ReadInt32();
+            this.Names.AddRange(Encoding.ASCII.GetString(br.ReadBytes(nameSectionLength)).Split('\0'));
+            if (nameCount != this.Names.Count)
+            {
+                this.Names.RemoveRange(nameCount, this.Names.Count - nameCount);
+            }
+
+            this.ProjectName = this.Names[projectNameIndex];
+
+            // Assigning names and parent/sub entries to all file and folder entries
+            foreach (ReleaseManifestFolderEntry folderEntry in folders)
+            {
+                folderEntry.Name = this.Names[folderEntry.NameIndex];
+                for (int i = 0; i < folderEntry.SubFolderCount; i++)
+                {
+                    folders[folderEntry.SubFolderStartIndex + i].Parent = folderEntry;
+                    folderEntry._folders.Add(folders[folderEntry.SubFolderStartIndex + i]);
+                }
+                for (int i = 0; i < folderEntry.FileCount; i++)
+                {
+                    files[folderEntry.FileListStartIndex + i].Folder = folderEntry;
+                    folderEntry._files.Add(files[folderEntry.FileListStartIndex + i]);
+                }
+            }
+            foreach (ReleaseManifestFileEntry fileEntry in files)
+            {
+                fileEntry.Name = this.Names[fileEntry.NameIndex];
+            }
+            this.Project = folders[0];
         }
 
         /// <summary>
@@ -254,6 +240,20 @@ namespace Fantome.Libraries.LeagueFileManager.ReleaseManifest
                 bw.Write(Encoding.ASCII.GetBytes(name));
                 bw.Write((byte)0);
             }
+        }
+
+        /// <summary>
+        /// Returns the position of the specified name in <see cref="Names"/>. If the specified name was not found in the list, it is added to it.
+        /// </summary>
+        private int GetNameIndex(string name)
+        {
+            int gotIndex = this.Names.IndexOf(name);
+            if (gotIndex == -1)
+            {
+                gotIndex = this.Names.Count;
+                this.Names.Add(name);
+            }
+            return gotIndex;
         }
 
         /// <summary>

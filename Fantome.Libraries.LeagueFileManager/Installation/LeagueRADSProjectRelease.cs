@@ -53,24 +53,8 @@ namespace Fantome.Libraries.LeagueFileManager.Installation
         }
 
         public void InstallFile(string gamePath, string filePath, byte[] md5, LeagueRADSDeployRules deployRules)
-        {
-            if (filePath == null)
-                throw new NotSpecifiedFileToInstallException();
-
+        {            
             FileInfo fileToInstall = new FileInfo(filePath);
-            if (!fileToInstall.Exists)
-                throw new FileToInstallNotFoundException();
-
-            if (md5 == null)
-            {
-                using (var newMD5 = MD5.Create())
-                {
-                    using (var stream = File.OpenRead(filePath))
-                    {
-                        md5 = newMD5.ComputeHash(stream);
-                    }
-                }
-            }
 
             // Getting the matching file entry (null if new file)
             ReleaseManifestFileEntry fileEntry = this.GameManifest.GetFile(gamePath, false);
@@ -219,16 +203,6 @@ namespace Fantome.Libraries.LeagueFileManager.Installation
         public class ReleaseManifestNotFoundException : Exception
         {
             public ReleaseManifestNotFoundException() : base("The release manifest was not found for this release.") { }
-        }
-
-        public class FileToInstallNotFoundException : Exception
-        {
-            public FileToInstallNotFoundException() : base("The specified file to install doesn't exist.") { }
-        }
-
-        public class NotSpecifiedFileToInstallException : Exception
-        {
-            public NotSpecifiedFileToInstallException() : base("The file to install path cannot be null.") { }
         }
 
         public class UnsupportedDeployModeException : Exception

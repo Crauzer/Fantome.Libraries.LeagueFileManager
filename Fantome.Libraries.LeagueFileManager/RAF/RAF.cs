@@ -67,6 +67,7 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
                 // Create a new RAF file
                 this.Version = 1;
                 this.ManagerIndex = 0;
+                InitDataStream();
             }
         }
 
@@ -83,6 +84,67 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
             }
             Directory.CreateDirectory(Path.GetDirectoryName(this.FilePath));
             this._dataStream = File.Open(this.FilePath + ".dat", FileMode.OpenOrCreate);
+        }
+
+        /// <summary>
+        /// Saves the content of the current <see cref="RAF"/> at <see cref="FilePath"/>.
+        /// </summary>
+        public void Save()
+        {
+            using (BinaryWriter bw = new BinaryWriter(new FileStream(this.FilePath, FileMode.Create)))
+            {
+                this.Write(bw);
+            }
+        }
+
+        /// <summary>
+        /// Adds a new file to the current <see cref="RAF"/>.
+        /// </summary>
+        /// <param name="gamePath">Game path of the file to add.</param>
+        /// <param name="data">Raw data of the file to add.</param>
+        /// <param name="compress">Whether the file data needs to be ZLIB compressed.</param>
+        public void AddFile(string gamePath, byte[] data, bool compress)
+        {
+            this.InitDataStream();
+            this._dataStream.Seek(0, SeekOrigin.End);
+            uint fileOffset = (uint)this._dataStream.Length;
+            int fileLength = data.Length;
+            if (compress)
+            {
+                this._dataStream.Write(BitConverter.GetBytes((ushort)40056), 0, 2);
+                byte[] deflateData = Deflate(data);
+                this._dataStream.Write(deflateData, 0, deflateData.Length);
+                this._dataStream.Write(BitConverter.GetBytes(GetAdler32Hash(data)), 0, 4);
+                fileLength = deflateData.Length + 2 + 4;
+            }
+            else
+            {
+                this._dataStream.Write(data, 0, data.Length);
+            }
+            this.Files.Add(new RAFFileEntry(this, gamePath, fileOffset, (uint)fileLength));
+        }
+
+        /// <summary>
+        /// Adds a new file to the current <see cref="RAF"/>.
+        /// </summary>
+        /// <param name="gamePath">Game path of the file to add.</param>
+        /// <param name="inputFilePath">Path (on your computer) of the file to add.</param>
+        /// <param name="compress">Whether the file data needs to be ZLIB compressed.</param>
+        public void AddFile(string gamePath, string inputFilePath, bool compress)
+        {
+            this.AddFile(gamePath, File.ReadAllBytes(inputFilePath), compress);
+        }
+
+        /// <summary>
+        /// Closes the opened data file stream of the current <see cref="RAF"/>.
+        /// </summary>
+        public void Dispose()
+        {
+            if (this._dataStream != null)
+            {
+                this._dataStream.Dispose();
+                this._dataStream = null;
+            }
         }
 
         /// <summary>
@@ -118,17 +180,6 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
         }
 
         /// <summary>
-        /// Saves the content of the current <see cref="RAF"/> at <see cref="FilePath"/>.
-        /// </summary>
-        public void Save()
-        {
-            using (BinaryWriter bw = new BinaryWriter(new FileStream(this.FilePath, FileMode.Create)))
-            {
-                this.Write(bw);
-            }
-        }
-
-        /// <summary>
         /// Writes the content of the current <see cref="RAF"/> in a previously initialized <see cref="BinaryReader"/>.
         /// </summary>
         /// <param name="bw"></param>
@@ -159,44 +210,6 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
         }
 
         /// <summary>
-        /// Adds a new file to the current <see cref="RAF"/>.
-        /// </summary>
-        /// <param name="gamePath">Game path of the file to add.</param>
-        /// <param name="data">Raw data of the file to add.</param>
-        /// <param name="compress">Whether the file data needs to be ZLIB compressed.</param>
-        public void AddFile(string gamePath, byte[] data, bool compress)
-        {
-            this.InitDataStream();
-            this._dataStream.Seek(0, SeekOrigin.End);
-            uint fileOffset = (uint)this._dataStream.Length;
-            int fileLength = data.Length;
-            if (compress)
-            {
-                this._dataStream.Write(BitConverter.GetBytes((ushort)40056), 0, 2);
-                byte[] deflateData = GetCompressedData(data);
-                this._dataStream.Write(deflateData, 0, deflateData.Length);
-                this._dataStream.Write(BitConverter.GetBytes(GetAdler32Hash(data)), 0, 4);
-                fileLength = deflateData.Length + 2 + 4;
-            }
-            else
-            {
-                this._dataStream.Write(data, 0, data.Length);
-            }
-            this.Files.Add(new RAFFileEntry(this, gamePath, fileOffset, (uint)fileLength));
-        }
-
-        /// <summary>
-        /// Adds a new file to the current <see cref="RAF"/>.
-        /// </summary>
-        /// <param name="gamePath">Game path of the file to add.</param>
-        /// <param name="inputFilePath">Path (on your computer) of the file to add.</param>
-        /// <param name="compressed">Whether the file data needs to be ZLIB compressed.</param>
-        public void AddFile(string gamePath, string inputFilePath, bool compressed)
-        {
-            this.AddFile(gamePath, File.ReadAllBytes(inputFilePath), compressed);
-        }
-
-        /// <summary>
         /// Checksum used for ZLIB compression.
         /// </summary>
         /// <param name="data">Raw data to calculate the checksum from.</param>
@@ -215,11 +228,11 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
         }
 
         /// <summary>
-        /// Deflate Compresses the passed data.
+        /// Deflate the passed data.
         /// </summary>
-        /// <param name="rawData">Data to Deflate compress.</param>
-        /// <returns>The Deflate compressed data.</returns>
-        public static byte[] GetCompressedData(byte[] rawData)
+        /// <param name="rawData">Data to deflate.</param>
+        /// <returns>The compressed data.</returns>
+        private static byte[] Deflate(byte[] rawData)
         {
             byte[] compressedData = null;
             using (MemoryStream originalStream = new MemoryStream(rawData))
@@ -234,40 +247,6 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
                 }
             }
             return compressedData;
-        }
-
-        /// <summary>
-        /// Decompresses a Deflate Compressed data.
-        /// </summary>
-        /// <param name="compressedData">Deflate Compressed data to decompress.</param>
-        /// <returns>The decompressed data.</returns>
-        public static byte[] GetDecompressedData(byte[] compressedData)
-        {
-            byte[] decompressedData = null;
-            using (MemoryStream compressedStream = new MemoryStream(compressedData))
-            {
-                using (MemoryStream rawStream = new MemoryStream())
-                {
-                    using (DeflateStream decompressionStream = new DeflateStream(compressedStream, CompressionMode.Decompress))
-                    {
-                        decompressionStream.CopyTo(rawStream);
-                    }
-                    decompressedData = rawStream.ToArray();
-                }
-            }
-            return decompressedData;
-        }
-
-        /// <summary>
-        /// Closes the opened data file stream of the current <see cref="RAF"/>.
-        /// </summary>
-        public void Dispose()
-        {
-            if (this._dataStream != null)
-            {
-                this._dataStream.Dispose();
-                this._dataStream = null;
-            }
         }
 
         /// <summary>
