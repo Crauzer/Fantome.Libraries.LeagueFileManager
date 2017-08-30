@@ -40,7 +40,7 @@ namespace Fantome.Libraries.LeagueFileManager.RiotArchive
         /// <summary>
         /// <see cref="FileStream"/> of the opened data file of the current <see cref="RAF"/>.
         /// </summary>
-        public FileStream _dataStream { get; private set; }
+        internal FileStream _dataStream { get; private set; }
 
         /// <summary>
         /// Opens or create a <see cref="RAF"/> at the specified path.

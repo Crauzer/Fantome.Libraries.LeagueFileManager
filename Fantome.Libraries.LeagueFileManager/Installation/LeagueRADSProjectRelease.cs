@@ -53,7 +53,7 @@ namespace Fantome.Libraries.LeagueFileManager.Installation
         }
 
         public void InstallFile(string gamePath, string filePath, byte[] md5, LeagueRADSDeployRules deployRules)
-        {            
+        {
             FileInfo fileToInstall = new FileInfo(filePath);
 
             // Getting the matching file entry (null if new file)
@@ -162,7 +162,7 @@ namespace Fantome.Libraries.LeagueFileManager.Installation
                 fileEntry.SizeRaw = originalEntry.SizeRaw;
                 fileEntry.Version = originalEntry.Version;
             }
-            this.HasChanged = true;
+            HasChanged = true;
         }
 
         private string GetFileToInstallPath(string fileFullPath, ReleaseManifestFile.DeployMode deployMode, uint version)
@@ -192,6 +192,7 @@ namespace Fantome.Libraries.LeagueFileManager.Installation
             if (HasChanged)
             {
                 GameManifest.Save();
+                HasChanged = false;
             }
         }
 
