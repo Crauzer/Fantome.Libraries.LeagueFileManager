@@ -54,11 +54,11 @@ namespace Fantome.Libraries.LeagueFileManager.Installation
             }
         }
 
-        public override void InstallFile(string gamePath, string filePath, byte[] md5)
+        public override void InstallFile(string gamePath, string filePath)
         {
-            base.InstallFile(gamePath, filePath, md5);
+            base.InstallFile(gamePath, filePath);
             string[] splitGamePath = SplitGamePath(gamePath);
-            GetProjectLatestRelease(splitGamePath[0]).InstallFile(splitGamePath[1], filePath, md5, DeployRules);
+            GetProjectLatestRelease(splitGamePath[0]).InstallFile(splitGamePath[1], filePath, DeployRules);
         }
 
         public override void RevertFile(string gamePath, byte[] md5)

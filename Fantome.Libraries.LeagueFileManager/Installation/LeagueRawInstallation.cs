@@ -20,13 +20,14 @@ namespace Fantome.Libraries.LeagueFileManager.Installation
             _backupArchive.Dispose();
         }
 
-        public override void InstallFile(string gamePath, string filePath, byte[] md5)
+        public override void InstallFile(string gamePath, string filePath)
         {
+            base.InstallFile(gamePath, filePath);
             FileInfo leagueFile = new FileInfo(GetLeagueFilePath(gamePath));
             if (leagueFile.Exists)
             {
                 // Check if file needs to be installed
-                if (CalculateMD5(leagueFile).SequenceEqual(md5))
+                if (CalculateMD5(leagueFile.FullName).SequenceEqual(CalculateMD5(filePath)))
                     return;
 
                 // Check if backup is necessary
@@ -46,7 +47,7 @@ namespace Fantome.Libraries.LeagueFileManager.Installation
             FileInfo leagueFile = new FileInfo(GetLeagueFilePath(gamePath));
 
             // File to uninstall is not installed!
-            if (md5 != null && !CalculateMD5(leagueFile).SequenceEqual(md5))
+            if (md5 != null && !CalculateMD5(leagueFile.FullName).SequenceEqual(md5))
                 return;
 
             if (_backupArchive.HasFile(gamePath))
@@ -62,17 +63,6 @@ namespace Fantome.Libraries.LeagueFileManager.Installation
             else
             {
                 leagueFile.Delete();
-            }
-        }
-
-        private byte[] CalculateMD5(FileInfo fileInfo)
-        {
-            using (var newMD5 = MD5.Create())
-            {
-                using (var stream = fileInfo.OpenRead())
-                {
-                    return newMD5.ComputeHash(stream);
-                }
             }
         }
 

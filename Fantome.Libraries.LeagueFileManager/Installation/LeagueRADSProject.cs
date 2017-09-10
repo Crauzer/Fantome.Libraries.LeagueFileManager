@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Fantome.Libraries.LeagueFileManager.ReleaseManifest;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -66,6 +67,42 @@ namespace Fantome.Libraries.LeagueFileManager.Installation
                 release.Dispose();
             }
             BackupArchive.Dispose();
+        }
+
+        public string GetFileInstallationPath(ReleaseManifestFileEntry fileEntry)
+        {
+            return GetFileInstallationPath(GetFolder(), fileEntry);
+        }
+
+        public string GetFileInstallationPath(string fileFullPath, ReleaseManifestFile.DeployMode deployMode, uint version)
+        {
+            return GetFileInstallationPath(GetFolder(), fileFullPath, deployMode, version);
+        }
+
+        public static string GetFileInstallationPath(string projectFolder, ReleaseManifestFileEntry fileEntry)
+        {
+            return GetFileInstallationPath(projectFolder, fileEntry.GetFullPath(), fileEntry.DeployMode, fileEntry.Version);
+        }
+
+        public static string GetFileInstallationPath(string projectFolder, string fileFullPath, ReleaseManifestFile.DeployMode deployMode, uint version)
+        {
+            if (deployMode == ReleaseManifestFile.DeployMode.Managed)
+            {
+                return String.Format("{0}/managedfiles/{1}/{2}", projectFolder, LeagueRADSInstallation.GetReleaseString(version), fileFullPath);
+            }
+            else if (deployMode == ReleaseManifestFile.DeployMode.Deployed4 || deployMode == ReleaseManifestFile.DeployMode.Deployed0)
+            {
+                return String.Format("{0}/releases/{1}/deploy/{2}", projectFolder, version, fileFullPath);
+            }
+            else
+            {
+                throw new UnsupportedDeployModeException();
+            }
+        }
+
+        public class UnsupportedDeployModeException : Exception
+        {
+            public UnsupportedDeployModeException() : base("The specified deploy mode is not supported yet.") { }
         }
 
         public class NoValidReleaseException : Exception

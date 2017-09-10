@@ -27,9 +27,9 @@ namespace Fantome.Libraries.LeagueFileManager
             }
         }
 
-        public void InstallFile(string gamePath, string filePath, byte[] md5 = null)
+        public void InstallFile(string gamePath, string filePath)
         {
-            _installation.InstallFile(gamePath, filePath, md5);
+            _installation.InstallFile(gamePath, filePath);
         }
         
         public void RevertFile(string gamePath, byte[] md5 = null)

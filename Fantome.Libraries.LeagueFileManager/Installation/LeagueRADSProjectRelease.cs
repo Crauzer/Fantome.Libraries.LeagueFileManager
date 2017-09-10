@@ -52,7 +52,7 @@ namespace Fantome.Libraries.LeagueFileManager.Installation
             return String.Format("{0}/releases/{1}", this.Project.GetFolder(), this.Version);
         }
 
-        public void InstallFile(string gamePath, string filePath, byte[] md5, LeagueRADSDeployRules deployRules)
+        public void InstallFile(string gamePath, string filePath, LeagueRADSDeployRules deployRules)
         {
             FileInfo fileToInstall = new FileInfo(filePath);
 
@@ -60,14 +60,15 @@ namespace Fantome.Libraries.LeagueFileManager.Installation
             ReleaseManifestFileEntry fileEntry = this.GameManifest.GetFile(gamePath, false);
 
             // File is already installed, don't install it again
-            if (fileEntry != null && fileEntry.MD5.SequenceEqual(md5))
+            byte[] fileMD5 = LeagueInstallation.CalculateMD5(filePath);
+            if (fileEntry != null && fileEntry.MD5.SequenceEqual(fileMD5))
                 return;
 
             // Finding the deploy mode to use
             ReleaseManifestFile.DeployMode deployMode = deployRules.GetTargetDeployMode(this.Project.Name, fileEntry);
 
             // Installing file
-            string installPath = this.GetFileToInstallPath(gamePath, deployMode, LeagueRADSInstallation.FantomeFilesVersion);
+            string installPath = Project.GetFileInstallationPath(gamePath, deployMode, LeagueRADSInstallation.FantomeFilesVersion);
             Directory.CreateDirectory(Path.GetDirectoryName(installPath));
             if (fileEntry != null && (deployMode == ReleaseManifestFile.DeployMode.Deployed4 || deployMode == ReleaseManifestFile.DeployMode.Deployed0))
             {
@@ -82,7 +83,7 @@ namespace Fantome.Libraries.LeagueFileManager.Installation
             {
                 fileEntry = this.GameManifest.GetFile(gamePath, true);
             }
-            fileEntry.MD5 = md5;
+            fileEntry.MD5 = fileMD5;
             fileEntry.DeployMode = deployMode;
             fileEntry.SizeRaw = (int)fileToInstall.Length;
             fileEntry.SizeCompressed = fileEntry.SizeRaw;
@@ -128,7 +129,7 @@ namespace Fantome.Libraries.LeagueFileManager.Installation
             if (md5 != null && !fileEntry.MD5.SequenceEqual(md5))
                 return;
 
-            string installedPath = GetFileToInstallPath(gamePath, fileEntry.DeployMode, fileEntry.Version);
+            string installedPath = Project.GetFileInstallationPath(gamePath, fileEntry.DeployMode, fileEntry.Version);
             ReleaseManifestFileEntry originalEntry = this.OriginalManifest.GetFile(gamePath, false);
 
             if (originalEntry == null)
@@ -165,22 +166,6 @@ namespace Fantome.Libraries.LeagueFileManager.Installation
             HasChanged = true;
         }
 
-        private string GetFileToInstallPath(string fileFullPath, ReleaseManifestFile.DeployMode deployMode, uint version)
-        {
-            if (deployMode == ReleaseManifestFile.DeployMode.Managed)
-            {
-                return String.Format("{0}/managedfiles/{1}/{2}", this.Project.GetFolder(), LeagueRADSInstallation.GetReleaseString(version), fileFullPath);
-            }
-            else if (deployMode == ReleaseManifestFile.DeployMode.Deployed4 || deployMode == ReleaseManifestFile.DeployMode.Deployed0)
-            {
-                return String.Format("{0}/releases/{1}/deploy/{2}", this.Project.GetFolder(), this.Version, fileFullPath);
-            }
-            else
-            {
-                throw new UnsupportedDeployModeException();
-            }
-        }
-
         private static bool HasToRestore(ReleaseManifestFile.DeployMode originalDeployMode, ReleaseManifestFile.DeployMode installedDeployedMode)
         {
             return ((originalDeployMode == ReleaseManifestFile.DeployMode.Deployed4 || originalDeployMode == ReleaseManifestFile.DeployMode.Deployed0)
@@ -204,11 +189,6 @@ namespace Fantome.Libraries.LeagueFileManager.Installation
         public class ReleaseManifestNotFoundException : Exception
         {
             public ReleaseManifestNotFoundException() : base("The release manifest was not found for this release.") { }
-        }
-
-        public class UnsupportedDeployModeException : Exception
-        {
-            public UnsupportedDeployModeException() : base("The specified deploy mode is not supported yet.") { }
         }
     }
 }
